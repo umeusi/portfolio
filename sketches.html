@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Y.Parris — Sketch Desk</title>
+<link rel="stylesheet" href="colors_and_type.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  html { background: #14130f; }
+  body {
+    background: #14130f;
+    color: var(--fg1);
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ============================================================
+     DESK — painted surface that fills the viewport
+     ============================================================ */
+  .desk {
+    position: relative;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background-image: url("assets/desk_surface_large.jpg");
+    background-size: cover;
+    background-position: center;
+    cursor: default;
+    touch-action: none;
+  }
+
+  /* ---- TOP BAR (shared nav) ---- */
+  .bar {
+    position: relative;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: clamp(20px, 2.4vw, 30px) clamp(22px, 3vw, 44px) 0;
+    pointer-events: none;
+  }
+  .bar-emblem { justify-self: start; pointer-events: auto; }
+  .bar-emblem img {
+    height: 26px;
+    width: auto;
+    display: block;
+    /* lift the dark emblem off the dark desk */
+    filter: brightness(0) invert(1);
+    opacity: 0.92;
+  }
+  .bar-emblem a { display: inline-block; }
+  .menu-btn {
+    justify-self: end;
+    grid-column: 3;
+    width: 44px;
+    height: 44px;
+    margin-right: -11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--parris-white);
+    cursor: pointer;
+    padding: 0;
+    pointer-events: auto;
+    transition: color var(--dur) var(--ease);
+  }
+  .menu-btn:hover { color: var(--accent); }
+  .menu-btn svg { width: 24px; height: 24px; stroke-width: 1.6; }
+  .menu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+  /* a quiet hint, centred above the pile */
+  .desk-hint {
+    position: absolute;
+    left: 50%;
+    top: clamp(74px, 10vh, 116px);
+    transform: translateX(-50%);
+    z-index: 50;
+    font-family: var(--font-sans);
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--parris-gray);
+    text-indent: 0.22em;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 600ms var(--ease);
+  }
+
+  /* ---- CARDS ---- */
+  .card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 5px;
+    background: #f7f3ea;
+    opacity: 0;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.5) inset,
+      0 22px 40px -16px rgba(0, 0, 0, 0.66),
+      0 6px 14px -6px rgba(0, 0, 0, 0.5);
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    will-change: transform, left, top;
+    transition: box-shadow 260ms var(--ease), opacity 360ms var(--ease);
+  }
+  .card::after {
+    /* faint inner line so the print reads as matted */
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    pointer-events: none;
+  }
+  .card img {
+    display: block;
+    width: 100%;
+    height: auto;
+    pointer-events: none;
+  }
+  .card.thin { padding: 3px; }
+  .card.thin::after { inset: 3px; }
+
+  .card.grabbing {
+    cursor: grabbing;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.6) inset,
+      0 40px 70px -20px rgba(0, 0, 0, 0.74),
+      0 12px 26px -8px rgba(0, 0, 0, 0.6);
+  }
+
+  /* ---- MENU OVERLAY (shared) ---- */
+  .menu {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: var(--parris-navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--dur) var(--ease), visibility var(--dur) var(--ease);
+  }
+  .menu.open { opacity: 1; visibility: visible; }
+  .menu-close {
+    position: absolute;
+    top: clamp(20px, 2.4vw, 30px);
+    right: clamp(22px, 3vw, 44px);
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--parris-white);
+    cursor: pointer;
+    padding: 0;
+    transition: color var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .menu-close:hover { color: #E7C98C; transform: rotate(90deg); }
+  .menu-close svg { width: 26px; height: 26px; stroke-width: 1.6; }
+  .menu-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .menu-inner {
+    padding: 0 clamp(28px, 9vw, 160px);
+    transform: translateY(14px);
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+    transition-delay: 60ms;
+  }
+  .menu.open .menu-inner { transform: translateY(0); opacity: 1; }
+  .menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(20px, 2.6vw, 36px);
+  }
+  .menu-link {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: clamp(34px, 4.6vw, 64px);
+    line-height: 1.04;
+    letter-spacing: -0.005em;
+    color: var(--parris-white);
+    text-decoration: none;
+    display: inline-block;
+    transition: color var(--dur) var(--ease);
+  }
+  .menu-link:hover { color: var(--accent); }
+
+  /* contact block beneath the menu links */
+  .menu-contact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: clamp(28px, 3.4vw, 44px);
+  }
+  .menu-divider {
+    width: clamp(60px, 11vw, 110px);
+    height: 1px;
+    background: rgba(250, 248, 244, 0.32);
+    margin-bottom: clamp(20px, 2.4vw, 30px);
+  }
+  .menu-email {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(19px, 1.7vw, 26px);
+    color: var(--parris-white);
+    text-decoration: none;
+    transition: color var(--dur) var(--ease);
+  }
+  .menu-email:hover { color: var(--accent); }
+</style>
+</head>
+<body class="theme-light">
+
+  <div class="desk" id="desk" data-screen-label="Sketch desk">
+
+    <header class="bar">
+      <div class="bar-emblem">
+        <a href="index.html" aria-label="Y.Parris — home"><img src="assets/emblem_brown.png" alt="Y.Parris" /></a>
+      </div>
+      <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false">
+        <i data-lucide="menu"></i>
+      </button>
+    </header>
+
+    <!-- scattered cards; positions/rotation set inline, finalized by JS -->
+    <div class="card" data-x="0.13" data-y="0.30" data-w="300" data-rot="-7" style="z-index:1;">
+      <img src="assets/sk_memphis.jpg" alt="" />
+    </div>
+    <div class="card" data-x="0.30" data-y="0.52" data-w="208" data-rot="5" style="z-index:2;">
+      <img src="assets/sk_carrots.jpg" alt="" />
+    </div>
+    <div class="card" data-x="0.46" data-y="0.28" data-w="210" data-rot="-4" style="z-index:3;">
+      <img src="assets/sk_dog_beach.jpg" alt="" />
+    </div>
+    <div class="card" data-x="0.58" data-y="0.55" data-w="196" data-rot="8" style="z-index:4;">
+      <img src="assets/sk_dogwalker.jpg" alt="" />
+    </div>
+    <div class="card thin" data-x="0.70" data-y="0.30" data-w="290" data-rot="-3" style="z-index:5;">
+      <img src="assets/sk_trees.jpg" alt="" />
+    </div>
+    <div class="card" data-x="0.40" data-y="0.40" data-w="206" data-rot="3" style="z-index:6;">
+      <img src="assets/sk_truck.jpg" alt="" />
+    </div>
+    <div class="card" data-x="0.76" data-y="0.54" data-w="200" data-rot="-9" style="z-index:7;">
+      <img src="assets/sk_yosemite.jpg" alt="" />
+    </div>
+    <div class="card" data-x="0.60" data-y="0.36" data-w="222" data-rot="6" style="z-index:8;">
+      <img src="assets/sk_destination.jpg" alt="" />
+    </div>
+
+    <p class="desk-hint" id="deskHint">Drag to rearrange</p>
+
+    <!-- full-screen menu (shared) -->
+    <nav class="menu" id="menu" aria-hidden="true">
+      <button class="menu-close" id="menuClose" aria-label="Close menu">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="menu-inner">
+        <ul class="menu-list">
+          <li><a class="menu-link" href="works.html">Works</a></li>
+          <li><a class="menu-link" href="sketches.html">Sketches</a></li>
+          <li><a class="menu-link" href="about.html">About</a></li>
+          <li><a class="menu-link" href="painters-tool.html">Painter&rsquo;s Tool</a></li>
+        </ul>
+        <div class="menu-contact">
+          <span class="menu-divider"></span>
+          <a class="menu-email" href="mailto:info@yumiparris.com">info@yumiparris.com</a>
+        </div>
+      </div>
+    </nav>
+
+  </div>
+
+  <script>
+    /* ---- Menu ---- */
+    (function () {
+      if (window.lucide) lucide.createIcons();
+      var btn   = document.getElementById('menuBtn');
+      var close = document.getElementById('menuClose');
+      var menu  = document.getElementById('menu');
+      function open() {
+        menu.classList.add('open');
+        menu.setAttribute('aria-hidden', 'false');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+      function shut() {
+        menu.classList.remove('open');
+        menu.setAttribute('aria-hidden', 'true');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+      btn.addEventListener('click', open);
+      close.addEventListener('click', shut);
+      menu.addEventListener('click', function (e) { if (e.target === menu) shut(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') shut(); });
+    })();
+
+    /* ---- Scatter + drag ---- */
+    (function () {
+      var desk  = document.getElementById('desk');
+      var hint  = document.getElementById('deskHint');
+      var cards = [].slice.call(document.querySelectorAll('.card'));
+      var zTop  = cards.length;
+
+      function vw() { return desk.clientWidth; }
+      function vh() { return desk.clientHeight; }
+
+      // place a card at a left/top (px) keeping its rotation
+      function place(card, x, y) {
+        card.style.left = x + 'px';
+        card.style.top  = y + 'px';
+        card.style.transform = 'rotate(' + (card._rot || 0) + 'deg)';
+      }
+
+      function rand(min, max) { return min + Math.random() * (max - min); }
+
+      function layout() {
+        // iPad / tablet range — bump the whole pile up 20% so it fills the screen
+        var ipadBoost = (vw() >= 761 && vw() <= 1024) ? 1.2 : 1;
+        cards.forEach(function (card) {
+          var w = parseFloat(card.getAttribute('data-w')) || 220;
+          // responsive: shrink cards on small / short screens so the pile fits centred
+          var scale = Math.min(1, vw() / 1280, vh() / 880);
+          card.style.width = Math.round(w * (0.66 + 0.34 * scale) * ipadBoost) + 'px';
+        });
+        // measure after width applied, then drop them in a loose pile
+        requestAnimationFrame(function () {
+          // pile centred on the desk
+          var cx = vw() * rand(0.47, 0.53);
+          var cy = vh() * rand(0.45, 0.50);
+          // random stacking order each load
+          var order = cards.slice().sort(function () { return Math.random() - 0.5; });
+          order.forEach(function (card, i) {
+            card.style.zIndex = i + 1;
+            card._rot = rand(-22, 22);
+            var cw = card.offsetWidth, ch = card.offsetHeight;
+            // scatter around the pile centre — tight enough to overlap heavily
+            var spread = Math.min(vw(), vh());
+            var x = cx + rand(-0.15, 0.15) * spread - cw / 2;
+            var y = cy + rand(-0.11, 0.11) * spread - ch / 2;
+            // keep on-screen (below the top bar)
+            x = Math.max(8, Math.min(vw() - cw - 8, x));
+            y = Math.max(64, Math.min(vh() - ch - 8, y));
+            place(card, x, y);
+            card.style.opacity = '1';
+          });
+          zTop = cards.length;
+        });
+      }
+
+      // drag
+      var active = null, startX = 0, startY = 0, baseX = 0, baseY = 0, moved = false;
+
+      function onDown(e) {
+        var card = e.currentTarget;
+        active = card;
+        moved = false;
+        card.setPointerCapture && card.setPointerCapture(e.pointerId);
+        card.classList.add('grabbing');
+        // keep the stack below the hint (z-index 50): renormalise if it climbs
+        if (zTop >= 44) {
+          cards.slice()
+            .sort(function (a, b) { return (+a.style.zIndex || 0) - (+b.style.zIndex || 0); })
+            .forEach(function (c, i) { c.style.zIndex = i + 1; });
+          zTop = cards.length;
+        }
+        zTop += 1;
+        card.style.zIndex = zTop;
+        var pt = point(e);
+        startX = pt.x; startY = pt.y;
+        baseX = parseFloat(card.style.left) || 0;
+        baseY = parseFloat(card.style.top) || 0;
+        if (hint) hint.style.opacity = '0';
+        e.preventDefault();
+      }
+      function onMove(e) {
+        if (!active) return;
+        var pt = point(e);
+        var dx = pt.x - startX, dy = pt.y - startY;
+        if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+        var cw = active.offsetWidth, ch = active.offsetHeight;
+        var x = Math.max(-cw * 0.4, Math.min(vw() - cw * 0.6, baseX + dx));
+        var y = Math.max(56, Math.min(vh() - ch * 0.5, baseY + dy));
+        active.style.left = x + 'px';
+        active.style.top  = y + 'px';
+      }
+      function onUp(e) {
+        if (!active) return;
+        active.classList.remove('grabbing');
+        active = null;
+      }
+      function point(e) { return { x: e.clientX, y: e.clientY }; }
+
+      cards.forEach(function (card) {
+        card.addEventListener('pointerdown', onDown);
+        card.addEventListener('pointermove', onMove);
+        card.addEventListener('pointerup', onUp);
+        card.addEventListener('pointercancel', onUp);
+        // prevent the emblem-style image drag ghost
+        card.addEventListener('dragstart', function (e) { e.preventDefault(); });
+      });
+
+      // place once the paintings have real dimensions, so the pile never jumps
+      (function () {
+        var imgs = cards.map(function (c) { return c.querySelector('img'); });
+        var pending = imgs.filter(function (im) { return !im.complete; }).length;
+        if (pending === 0) {
+          layout();
+        } else {
+          imgs.forEach(function (im) {
+            if (im.complete) return;
+            var done = function () { pending -= 1; if (pending <= 0) layout(); };
+            im.addEventListener('load', done);
+            im.addEventListener('error', done);
+          });
+        }
+      })();
+      var rt;
+      window.addEventListener('resize', function () {
+        clearTimeout(rt);
+        rt = setTimeout(layout, 160);
+      });
+    })();
+  </script>
+
+</body>
+</html>
