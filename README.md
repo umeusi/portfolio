@@ -2,7 +2,7 @@
 
 A static portfolio site for the painter Y.Parris. No build step, no
 dependencies to install — every page is plain HTML/CSS that runs by opening
-a file in the browser or serving the folder statically.
+a file in the browser or serving the folder statically. 
 
 ## Structure
 
