@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="About" subtitle="Artist statement painted onto aged canvas" -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Y.Parris — About</title>
+<link rel="stylesheet" href="colors_and_type.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { background: #100d08; }
+  body {
+    background: #100d08;
+    color: var(--parris-white);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ============================================================
+     CANVAS — an aged oil canvas filling the viewport.
+     The artist's statement is "painted" onto it.
+     ============================================================ */
+  .canvas {
+    position: fixed;
+    inset: clamp(70px, 8.5vh, 96px) 0 0 0;
+    overflow: hidden;
+    background:
+      url("assets/about_canvas_fig.jpg") left top / cover no-repeat,
+      #1c1810;
+    isolation: isolate;
+  }
+  /* deepen the edges + a wiped-darker pool behind the words,
+     so the painted text always has a ground to sit on */
+  .canvas::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 95% at 32% 44%, rgba(8,6,3,0.55) 0%, rgba(8,6,3,0) 52%),
+      radial-gradient(140% 120% at 50% 50%, rgba(0,0,0,0) 54%, rgba(0,0,0,0.62) 100%);
+  }
+  /* a faint, warm raking light from the upper-left — gallery picture light */
+  .canvas::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(80% 60% at 22% 8%, rgba(231,201,140,0.06) 0%, rgba(231,201,140,0) 60%);
+    mix-blend-mode: screen;
+  }
+
+  /* ============================================================
+     THE STATEMENT — painted block, anchored left-of-centre
+     ============================================================ */
+  .plate {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    padding: clamp(110px, 14vh, 180px) clamp(52px, 7vw, 130px) clamp(72px, 10vh, 130px);
+  }
+  .statement {
+    width: min(680px, 60vw);
+    margin-right: auto;
+  }
+  .statement .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(196,191,186,0.5);
+    margin: 0 0 clamp(22px, 3vh, 34px);
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .statement .body {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: clamp(18px, 1.45vw, 23px);
+    line-height: 1.62;
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+    color: rgb(196,191,186);
+    text-shadow: 0 1px 1px rgba(0,0,0,0.55), 0 0 22px rgba(0,0,0,0.35);
+    margin: 0;
+  }
+  .statement .body em { font-style: italic; color: rgb(214,209,203); }
+  .statement .sig {
+    display: block;
+    width: clamp(53px, 4.4vw, 68px);
+    height: auto;
+    margin: clamp(38px, 5.5vh, 60px) 0 0;
+    opacity: 0.92;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+  }
+
+  /* entrance — paint settling in, once on load (enhancement; base state is visible) */
+  @media (prefers-reduced-motion: no-preference) {
+    .statement.in .body {
+      animation: pp-rise 1.4s var(--ease) 0.30s both;
+    }
+    .statement.in .sig {
+      animation: pp-rise-sig 1.3s var(--ease) 1.0s both;
+    }
+  }
+  @keyframes pp-rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes pp-rise-sig {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 0.92; transform: none; }
+  }
+
+  @media (max-width: 760px) {
+    .statement { width: 100%; }
+    .statement .body { text-align: left; hyphens: none; }
+    /* bring the canvas up close under the emblem, and anchor the texture at its
+       top-left so the worn top corner shows; enlarge it so the worn BOTTOM edge
+       falls below the viewport and the signature sits on clean canvas */
+    .canvas {
+      inset: clamp(62px, 7.5vh, 84px) 0 0 0;
+      background-position: left top, left top;
+      background-size: auto 128%, auto;
+    }
+    /* keep the statement inside the canvas with equal top & left margins,
+       top-aligned (not vertically centred) so it never drifts above the canvas
+       on shorter phones; scrolls within the canvas if the text runs long */
+    .plate {
+      inset: clamp(62px, 7.5vh, 84px) 0 0 0;
+      align-items: flex-start;
+      padding: clamp(40px, 11vw, 64px);
+      overflow-y: auto;
+    }
+  }
+
+  /* tablet / iPad — anchor the statement to the canvas top-left with EQUAL top &
+     left margins (instead of vertically centring it), so the text + signature
+     sit high, level with the worn top-left corner of the canvas */
+  @media (min-width: 761px) and (max-width: 1024px) {
+    .canvas {
+      inset: clamp(80px, 9vh, 104px) 0 0 0;
+      background-position: left top, left top;
+      background-size: auto 122%, auto;
+    }
+    .plate {
+      inset: clamp(80px, 9vh, 104px) 0 0 0;
+      align-items: flex-start;
+      padding: clamp(48px, 6vw, 72px);
+      overflow-y: auto;
+    }
+    .statement { width: min(600px, 72vw); }
+  }
+
+  /* ============================================================
+     SHARED NAV — overlaid above the canvas
+     ============================================================ */
+  .bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: clamp(20px, 2.4vw, 30px) clamp(22px, 3vw, 44px) 0;
+    pointer-events: none;
+  }
+  /* subtle top gradation so the nav reads cleanly over the canvas
+     without cutting the image off with a hard band */
+  .bar::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: clamp(120px, 17vh, 190px);
+    pointer-events: none;
+    z-index: -1;
+    background: linear-gradient(to bottom,
+      rgba(8,6,3,0.62) 0%,
+      rgba(8,6,3,0.34) 38%,
+      rgba(8,6,3,0.10) 70%,
+      rgba(8,6,3,0) 100%);
+  }
+  .bar-emblem { justify-self: start; pointer-events: auto; }
+  .bar-emblem .emblem-mark {
+    display: block;
+    height: 26px;
+    aspect-ratio: 2582 / 2722;
+    opacity: 0.95;
+    background-color: #B89B83;
+    -webkit-mask: url("assets/emblem_white.png") center / contain no-repeat;
+            mask: url("assets/emblem_white.png") center / contain no-repeat;
+  }
+  .bar-emblem a { display: inline-block; }
+  .menu-btn {
+    justify-self: end;
+    grid-column: 3;
+    width: 44px;
+    height: 44px;
+    margin-right: -11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #B89B83;
+    cursor: pointer;
+    padding: 0;
+    pointer-events: auto;
+    transition: color var(--dur) var(--ease);
+  }
+  .menu-btn:hover { color: var(--parris-white); }
+  .menu-btn svg { width: 24px; height: 24px; stroke-width: 1.6; }
+  .menu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+  /* ---- MENU OVERLAY (shared) ---- */
+  .menu {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: var(--parris-navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--dur) var(--ease), visibility var(--dur) var(--ease);
+  }
+  .menu.open { opacity: 1; visibility: visible; }
+  .menu-close {
+    position: absolute;
+    top: clamp(20px, 2.4vw, 30px);
+    right: clamp(22px, 3vw, 44px);
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--parris-white);
+    cursor: pointer;
+    padding: 0;
+    transition: color var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .menu-close:hover { color: #E7C98C; transform: rotate(90deg); }
+  .menu-close svg { width: 26px; height: 26px; stroke-width: 1.6; }
+  .menu-inner {
+    transform: translateY(14px);
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+    transition-delay: 60ms;
+  }
+  .menu.open .menu-inner { transform: translateY(0); opacity: 1; }
+  .menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(20px, 2.6vw, 36px);
+  }
+  .menu-link {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: clamp(34px, 4.6vw, 64px);
+    line-height: 1.04;
+    color: var(--parris-white);
+    text-decoration: none;
+    transition: color var(--dur) var(--ease);
+  }
+  .menu-link:hover, .menu-link[aria-current="page"] { color: var(--accent); }
+
+  /* contact block beneath the menu links */
+  .menu-contact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: clamp(28px, 3.4vw, 44px);
+  }
+  .menu-divider {
+    width: clamp(60px, 11vw, 110px);
+    height: 1px;
+    background: rgba(250, 248, 244, 0.32);
+    margin-bottom: clamp(20px, 2.4vw, 30px);
+  }
+  .menu-email {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: clamp(19px, 1.7vw, 26px);
+    color: var(--parris-white);
+    text-decoration: none;
+    transition: color var(--dur) var(--ease);
+  }
+  .menu-email:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+  <!-- the aged canvas -->
+  <div class="canvas" data-screen-label="About"></div>
+
+  <!-- the statement, painted onto the canvas -->
+  <div class="plate">
+    <div class="statement" id="statement">
+      <p class="body">Exercise, sleep and family are my priority. Because if those things aren&rsquo;t checked, I can&rsquo;t paint. For me, painting is like playing sports. I enjoy the act of doing it more than the end result. I don&rsquo;t care for abstract work. There&rsquo;s too much of it and it&rsquo;s too reliant on mood. I need something measurable, like sports that require skill, where you can clearly judge what is actually good versus bad. I&rsquo;m blessed to have found something I can endlessly aim toward, always trying to become better. I struggle to paint. It keeps me honest and grounded because I suck at it. But that&rsquo;s what makes it fun and gives me an excuse to paint more. Striving for beauty is a struggle and it never comes easy.</p>
+      <img class="sig" src="assets/parris_signature_gray.png" alt="Parris" />
+    </div>
+  </div>
+
+  <!-- shared nav -->
+  <header class="bar">
+    <div class="bar-emblem">
+      <a href="index.html" aria-label="Y.Parris — home"><span class="emblem-mark" role="img" aria-label="Y.Parris"></span></a>
+    </div>
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false">
+      <i data-lucide="menu"></i>
+    </button>
+  </header>
+
+  <nav class="menu" id="menu" aria-hidden="true">
+    <button class="menu-close" id="menuClose" aria-label="Close menu">
+      <i data-lucide="x"></i>
+    </button>
+    <div class="menu-inner">
+      <ul class="menu-list">
+        <li><a class="menu-link" href="works.html">Works</a></li>
+        <li><a class="menu-link" href="sketches.html">Sketches</a></li>
+        <li><a class="menu-link" href="about.html" aria-current="page">About</a></li>
+        <li><a class="menu-link" href="painters-tool.html">Painter&rsquo;s Tool</a></li>
+      </ul>
+      <div class="menu-contact">
+        <span class="menu-divider"></span>
+        <a class="menu-email" href="mailto:info@yumiparris.com">info@yumiparris.com</a>
+      </div>
+    </div>
+  </nav>
+
+  <script>
+    (function () {
+      if (window.lucide) lucide.createIcons();
+
+      // paint the statement in once, on load
+      var statement = document.getElementById('statement');
+      setTimeout(function () { statement.classList.add('in'); }, 80);
+
+      // menu
+      var btn = document.getElementById('menuBtn');
+      var close = document.getElementById('menuClose');
+      var menu = document.getElementById('menu');
+      function open() { menu.classList.add('open'); menu.setAttribute('aria-hidden','false'); btn.setAttribute('aria-expanded','true'); }
+      function shut() { menu.classList.remove('open'); menu.setAttribute('aria-hidden','true'); btn.setAttribute('aria-expanded','false'); }
+      btn.addEventListener('click', open);
+      close.addEventListener('click', shut);
+      menu.addEventListener('click', function (e) { if (e.target === menu) shut(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') shut(); });
+    })();
+  </script>
+
+</body>
+</html>

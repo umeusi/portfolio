@@ -1,0 +1,246 @@
+/* ============================================================
+   Y.PARRIS — Foundations: Color + Type
+   Painter's brand kit. Classical bones, modern edge.
+   ============================================================ */
+
+/* ---------- FONTS ---------- */
+@font-face {
+  font-family: "EB Garamond";
+  src: url("fonts/EBGaramond-VariableFont_wght.ttf") format("truetype-variations");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "EB Garamond";
+  src: url("fonts/EBGaramond-Italic-VariableFont_wght.ttf") format("truetype-variations");
+  font-weight: 400 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/Inter-VariableFont_opsz,wght.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/Inter-Italic-VariableFont_opsz,wght.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Larken";
+  src: url("fonts/Larken-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- BRAND COLOR TOKENS (raw) ---------- */
+  --parris-brown:      #86520A;  /* Primary — burnt ochre / raw umber */
+  --parris-blue:       #0C38EA;  /* Accent — electric ultramarine */
+  --parris-navy:       #222B43;  /* Deep ink navy */
+  --parris-taupe:      #B89B83;  /* Warm neutral — linen / clay */
+  --parris-gray:       #D9D9D9;  /* Cool light neutral */
+  --parris-black:      #111111;  /* Near-black ink */
+  --parris-espresso:   #231B11;  /* Deep roasted umber — footer / dark grounds */
+  --parris-white:      #FAF8F4;  /* Warm gallery white (paper) */
+  --parris-pure-white: #FFFFFF;
+
+  /* Tints / shades derived in oklch to stay in-family */
+  --parris-brown-700:  oklch(0.40 0.07 70);
+  --parris-brown-300:  oklch(0.72 0.06 72);
+  --parris-blue-700:   oklch(0.38 0.20 266);
+  --parris-navy-700:   oklch(0.24 0.04 268);
+  --parris-canvas:     #F2EDE4;  /* canvas/linen surface */
+  --parris-canvas-2:   #E8E0D3;  /* slightly deeper linen */
+
+  /* ---------- SEMANTIC — LIGHT MODE (default) ---------- */
+  --bg:        var(--parris-white);   /* page */
+  --bg-2:      var(--parris-canvas);  /* raised / panel */
+  --bg-3:      var(--parris-canvas-2);/* sunken / wells */
+  --surface:   var(--parris-pure-white);
+  --fg1:       var(--parris-black);   /* primary text */
+  --fg2:       #4A4942;               /* secondary text */
+  --fg3:       #8A887E;               /* muted / captions */
+  --line:      rgba(17, 17, 17, 0.14);/* hairline borders */
+  --line-strong: rgba(17, 17, 17, 0.32);
+
+  --primary:        var(--parris-brown);
+  --primary-fg:     var(--parris-white);
+  --accent:         var(--parris-blue);
+  --accent-fg:      var(--parris-pure-white);
+  --ink:            var(--parris-navy);
+
+  /* ---------- TYPE FAMILIES ---------- */
+  --font-serif:   "EB Garamond", "Times New Roman", Georgia, serif;
+  --font-display: "Larken", "EB Garamond", serif;
+  --font-sans:    "Inter", "Helvetica Neue", Arial, sans-serif;
+
+  /* ---------- TYPE SCALE (fluid-ish, fixed steps) ---------- */
+  --t-display:  clamp(56px, 7vw, 96px); /* @kind font */
+  --t-h1:       clamp(40px, 5vw, 64px); /* @kind font */
+  --t-h2:       40px;
+  --t-h3:       28px;
+  --t-h4:       22px;
+  --t-body-lg:  20px;
+  --t-body:     17px;
+  --t-small:    15px;
+  --t-eyebrow:  13px;
+  --t-caption:  12px;
+
+  /* ---------- SPACING (4px base) ---------- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+
+  /* ---------- RADIUS (sharp, subtle) ---------- */
+  --r-sm: 2px;
+  --r:    4px;   /* default */
+  --r-lg: 8px;
+  --r-pill: 999px;
+
+  /* ---------- ELEVATION (restrained, paper-soft) ---------- */
+  --shadow-1: 0 1px 2px rgba(17,17,17,0.06);
+  --shadow-2: 0 2px 8px rgba(17,17,17,0.08);
+  --shadow-3: 0 12px 40px rgba(17,17,17,0.12);
+
+  /* ---------- GRID ---------- */
+  --grid-cols: 16; /* @kind other */
+  --grid-gutter: 24px;
+  --grid-max: 1440px;
+
+  /* ---------- MOTION ---------- */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1); /* @kind other */
+  --dur: 360ms; /* @kind other */
+}
+
+/* ---------- DARK MODE ---------- */
+:root[data-theme="dark"],
+.theme-dark {
+  --bg:        var(--parris-navy);
+  --bg-2:      #1A2138;
+  --bg-3:      #141A2D;
+  --surface:   #283150;
+  --fg1:       #F1EDE6;
+  --fg2:       #C3C0B6;
+  --fg3:       #8E8C84;
+  --line:      rgba(241, 237, 230, 0.16);
+  --line-strong: rgba(241, 237, 230, 0.34);
+
+  --primary:    #C79A4E;        /* lifted ochre for contrast on navy */
+  --primary-fg: var(--parris-navy);
+  --accent:     #6E8BFF;        /* lifted ultramarine */
+  --accent-fg:  var(--parris-navy);
+  --ink:        var(--parris-white);
+
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-2: 0 2px 10px rgba(0,0,0,0.45);
+  --shadow-3: 0 16px 48px rgba(0,0,0,0.55);
+}
+
+/* ============================================================
+   SEMANTIC TYPE CLASSES
+   ============================================================ */
+.t-eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--t-eyebrow);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg3);
+}
+.t-display {
+  font-family: var(--font-display);
+  font-size: var(--t-display);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  color: var(--fg1);
+}
+h1, .t-h1 {
+  font-family: var(--font-serif);
+  font-size: var(--t-h1);
+  font-weight: 500;
+  line-height: 1.06;
+  letter-spacing: 0.005em;
+  color: var(--fg1);
+}
+h2, .t-h2 {
+  font-family: var(--font-serif);
+  font-size: var(--t-h2);
+  font-weight: 500;
+  line-height: 1.12;
+  color: var(--fg1);
+}
+h3, .t-h3 {
+  font-family: var(--font-serif);
+  font-size: var(--t-h3);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--fg1);
+}
+h4, .t-h4 {
+  font-family: var(--font-serif);
+  font-size: var(--t-h4);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--fg1);
+}
+.t-body-lg, p.lead {
+  font-family: var(--font-serif);
+  font-size: var(--t-body-lg);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--fg2);
+}
+p, .t-body {
+  font-family: var(--font-serif);
+  font-size: var(--t-body);
+  font-weight: 400;
+  line-height: 1.62;
+  color: var(--fg2);
+  text-wrap: pretty;
+}
+.t-small {
+  font-family: var(--font-serif);
+  font-size: var(--t-small);
+  line-height: 1.5;
+  color: var(--fg2);
+}
+.t-caption {
+  font-family: var(--font-sans);
+  font-size: var(--t-caption);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  color: var(--fg3);
+}
+.t-ui {
+  font-family: var(--font-sans);
+  font-size: var(--t-small);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--fg1);
+}
+em, .italic { font-style: italic; }
+
+/* Any all-caps run gets tracked out for legibility (dates, labels, metadata). */
+.caps {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
