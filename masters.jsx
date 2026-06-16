@@ -49,7 +49,7 @@ const MDATA = [
   {
     id:'northern', label:'Netherlandish', full:'Early Netherlandish & Northern Renaissance', period:'c. 1420–1555',
     artists:[
-      { name:'Jan van Eyck', dates:'c. 1380–1441',
+      { name:'Jan van Eyck', short:'Van Eyck', dates:'c. 1380–1441',
         note:'Van Eyck\'s oil technique produced a luminosity no earlier medium could approach. Working on chalk-primed oak panels, he built paintings in multiple transparent layers over meticulous underdrawing, each film allowing light to penetrate to the white ground before returning through the paint above. His blues are azurite in shadows, lapis lazuli reserved only for the highest-value sky and robe passages — cost-controlled with extraordinary precision. Lead tin yellow creates the concentrated brilliance in the most illuminated drapery folds.',
         pigments:[
           {n:'Lead white',c:'#EDE6D8'},{n:'Lapis lazuli',c:'#1B3B8C'},{n:'Azurite',c:'#3A5FA0'},
