@@ -331,7 +331,7 @@
   /* ---------- Drawer ---------- */
   .handlebar {
     position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
-    z-index: 25; display: flex; align-items: flex-end; gap: 3px;
+    z-index: 25; display: flex; align-items: flex-end; gap: 0;
     transition: bottom var(--dur) var(--ease);
   }
   .handlebar.open { bottom: var(--drawer-h); }
@@ -674,7 +674,13 @@
   .iconbtn:hover { color: var(--fg1); background: var(--bg-2); }
   .iconbtn .ico { width: 18px; height: 18px; }
 
+  /* iPad: give the handlebar enough clearance below the topbar when open */
+  @media (min-width: 681px) and (max-width: 1023px) {
+    .app { --drawer-h: calc(100dvh - 174px); }
+  }
+
   @media (max-width: 760px) {
+    .menu-btn.drawer-open { display: none; }
     .controls .label-text { display: none; }
     .seg-label, .seg-lead { display: none; }
     .segbtn { padding: 0 8px; }
@@ -726,6 +732,20 @@
 </style>
 </head>
 <body>
+<template id="__bundler_thumbnail" data-bg-color="#1A2138">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#1A2138"/>
+    <circle cx="600" cy="370" r="180" fill="#2E3A5A"/>
+    <circle cx="600" cy="370" r="180" fill="url(#sg)" opacity="0.7"/>
+    <defs>
+      <radialGradient id="sg" cx="38%" cy="32%">
+        <stop offset="0%" stop-color="#fff" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <text x="600" y="610" text-anchor="middle" font-family="serif" font-size="52" fill="rgba(250,248,244,0.5)" letter-spacing="12">PAINTER'S TOOL</text>
+  </svg>
+</template>
 <div id="root"></div>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>

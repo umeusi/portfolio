@@ -534,7 +534,7 @@ function App(){
               <span className="label-text">Value zones</span><span className="sw" />
             </button>
           </div>
-          <button className={"menu-btn"+(menuOpen?" on":"")} onClick={()=>setMenuOpen(v=>!v)}
+          <button className={"menu-btn"+(menuOpen?" on":"")+(panel?" drawer-open":"")} onClick={()=>setMenuOpen(v=>!v)}
             aria-expanded={menuOpen} aria-label="Open navigation menu" title="Menu">
             <span className="menu-ico"><span /><span /><span /></span>
           </button>

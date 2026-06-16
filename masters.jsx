@@ -56,7 +56,7 @@ const MDATA = [
           {n:'Vermilion',c:'#CC3030'},{n:'Red madder',c:'#BF4040'},{n:'Malachite',c:'#3A7A3A'},
           {n:'Lead tin yellow',c:'#D4C025'},{n:'Green earth',c:'#5A7A4A'},{n:'Bone black',c:'#282828'},
         ]},
-      { name:'Hans Holbein the Younger', dates:'c. 1497–1543',
+      { name:'Hans Holbein the Younger', short:'Holbein', dates:'c. 1497–1543',
         note:'Holbein\'s portrait surfaces are among the most precisely rendered in European painting — individual hairs, textile weaves, and jewel facets resolved with equal attention. He worked on chalk-primed oak with underdrawings transferred from careful preparatory studies. Flesh is built over a cool grey ground with warm glazes above; smalt provides the characteristic blue in costume and sky passages. Technical analysis reveals surprisingly little blending — the illusion of smooth surface arises from extraordinary control of thin paint application.',
         pigments:[
           {n:'Lead white',c:'#EDE6D8'},{n:'Smalt',c:'#4A6CA0'},{n:'Azurite',c:'#3A5FA0'},
@@ -82,7 +82,7 @@ const MDATA = [
           {n:'Vermilion',c:'#CC3030'},{n:'Red madder',c:'#BF4040'},{n:'Yellow ochre',c:'#C89A3A'},
           {n:'Lead tin yellow',c:'#D4C025'},{n:'Malachite',c:'#3A7A3A'},{n:'Bone black',c:'#282828'},
         ]},
-      { name:'Tiziano Vecelli (Titian)', dates:'c. 1488–1576',
+      { name:'Tiziano Vecelli (Titian)', short:'Titian', dates:'c. 1488–1576',
         note:'Titian built luminous flesh by layering transparent glazes of red madder and burnt sienna over a warm red ochre ground. X-ray analysis reveals a red-orange imprimatura beneath every skin passage — a warmth no optical mixture can replicate. His late works dissolved into near-transparent films, the weave of the canvas becoming part of the surface.',
         pigments:[
           {n:'Lead white',c:'#EDE6D8'},{n:'Lapis lazuli',c:'#1B3B8C'},{n:'Red madder',c:'#BF4040'},
@@ -108,7 +108,7 @@ const MDATA = [
           {n:'Red ochre',c:'#C05A30'},{n:'Azurite',c:'#3A5FA0'},{n:'Vermilion',c:'#CC3030'},
           {n:'Lead white',c:'#EDE6D8'},
         ]},
-      { name:'Georges de La Tour', dates:'c. 1593–1652',
+      { name:'Georges de La Tour', short:'La Tour', dates:'c. 1593–1652',
         note:'De La Tour\'s candlelit tenebrism reduced the palette to its extreme: warm light built from lead white, yellow ochre, and vermilion, pushed against deep darkness in ivory black and raw umber. His forms are far more radically simplified than Caravaggio\'s — curves near-geometric, faces reduced to essential volumes. Technical analysis reveals thin, extraordinarily smooth paint with little visible brushwork; the meditative surface conceals the construction beneath. Blues are almost entirely absent. His world is earth, fire, and shadow.',
         pigments:[
           {n:'Ivory black',c:'#1A1A1A'},{n:'Raw umber',c:'#7A5230'},{n:'Burnt sienna',c:'#9B5E3A'},
@@ -129,7 +129,7 @@ const MDATA = [
           {n:'Red ochre',c:'#C05A30'},{n:'Yellow ochre',c:'#C89A3A'},{n:'Vermilion',c:'#CC3030'},
           {n:'Smalt',c:'#4A6CA0'},{n:'Red madder',c:'#BF4040'},{n:'Burnt sienna',c:'#9B5E3A'},
         ]},
-      { name:'Rembrandt van Rijn', dates:'c. 1606–1669',
+      { name:'Rembrandt van Rijn', short:'Rembrandt', dates:'c. 1606–1669',
         note:'Rembrandt\'s palette contracted dramatically in his later years — youthful experiments gave way to earth tones and ivory black. He built focal points in thick creamy lead white impasto while leaving shadows as thin transparent glazes of raw and burnt umber. The fastest-drying pigment, raw umber, structured every underpainting.',
         pigments:[
           {n:'Yellow ochre',c:'#C89A3A'},{n:'Red ochre',c:'#C05A30'},{n:'Raw umber',c:'#7A5230'},
@@ -691,7 +691,7 @@ function MastersDrawer({ open, onClose }) {
             const seed = a.pigments[Math.floor(a.pigments.length/2)].c;
             return (
               <button key={a.name} className={"fam"+(i===artistIdx?" active":"")} onClick={()=>pickArtist(i)}>
-                <span className="seed" style={{background:seed}} />{a.name.split(' ').pop()}
+                <span className="seed" style={{background:seed}} />{a.short || a.name.split(' ').pop()}
               </button>
             );
           })}
