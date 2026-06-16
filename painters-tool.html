@@ -563,6 +563,9 @@
     right: 0; justify-content: flex-end; padding-right: var(--s-5);
     background: linear-gradient(270deg, var(--surface) 58%, transparent);
   }
+  /* brand-tab strip lives inside drawer-head padding — extend chevrons to drawer edge */
+  .brandtabs-wrap .fam-nav.prev { left: calc(-1 * var(--s-8)); }
+  .brandtabs-wrap .fam-nav.next { right: calc(-1 * var(--s-8)); }
   .fam-nav:hover { color: var(--primary); }
   .families {
     display: flex; gap: var(--s-6); padding: var(--s-3) var(--s-8) 0;
@@ -680,6 +683,7 @@
     .vs-title { display: none; }
     .hint { white-space: nowrap; }
     .btab .tag { display: none; }
+    /* pigments drawer mobile: detail slides up as overlay */
     .detail {
       display: block;
       position: absolute; inset: 0; z-index: 6;
@@ -695,11 +699,29 @@
     .drawer-body { position: relative; }
     .filterchip { padding: 0 0 11px; }
     .app { --drawer-h: calc(100dvh - 92px); }
+    .handlebar { left: 0; right: 0; transform: none; }
+    .handle { flex: 1; justify-content: center; padding: 0 var(--s-3); }
     .wells {
       padding: var(--s-5); gap: var(--s-4);
       grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
     }
-    .well .chip { aspect-ratio: 1 / 1; }
+    /* masters drawer mobile overrides — one unified scroll */
+    .drawer-masters .drawer-body { flex-direction: column; overflow-y: auto; }
+    .drawer-masters .wells {
+      flex: 0 0 auto; max-height: none; overflow-y: visible;
+      padding: var(--s-5); gap: var(--s-4);
+      grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+    }
+    .drawer-masters .detail {
+      flex: 0 0 auto;
+      position: relative; display: block;
+      width: auto; border-left: none; border-top: 1px solid var(--line);
+      background: var(--bg);
+      transform: none; pointer-events: auto; overflow-y: visible;
+      padding: var(--s-5) var(--s-5) var(--s-8);
+    }
+    .drawer-masters .detail.is-pigment { position: relative; inset: auto; z-index: auto; transition: none; box-shadow: none; }
+    .drawer-masters .detail:not(.is-pigment) .detail-back { display: none; }
   }
 </style>
 </head>
@@ -715,6 +737,7 @@
 <script src="data/michaelharding.js"></script>
 <script src="data/oldholland.js"></script>
 <script type="text/babel" src="munsell.jsx"></script>
+<script type="text/babel" src="masters.jsx"></script>
 <script type="text/babel" src="painter-app.jsx"></script>
 </body>
 </html>
