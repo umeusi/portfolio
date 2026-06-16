@@ -498,7 +498,7 @@ function App(){
     try { return localStorage.getItem("pt_bgdark")==="1"; } catch(e){ return false; }
   });
   useEffect(()=>{ try { localStorage.setItem("pt_bgdark", bgDark?"1":"0"); } catch(e){} },[bgDark]);
-  const [panel, setPanel] = useState(null); // null | 'pigments' | 'munsell'
+  const [panel, setPanel] = useState(null); // null | 'pigments' | 'munsell' | 'masters'
   const [detailShown, setDetailShown] = useState(false); // mobile: detail overlay raised only after a chip tap
   const [menuOpen, setMenuOpen] = useState(false);
   const togglePanel = (p)=> { setDetailShown(false); setPanel(cur=> cur===p ? null : p); };
@@ -534,7 +534,7 @@ function App(){
               <span className="label-text">Value zones</span><span className="sw" />
             </button>
           </div>
-          <button className={"menu-btn"+(menuOpen?" on":"")} onClick={()=>setMenuOpen(v=>!v)}
+          <button className={"menu-btn"+(menuOpen?" on":"")+(panel?" drawer-open":"")} onClick={()=>setMenuOpen(v=>!v)}
             aria-expanded={menuOpen} aria-label="Open navigation menu" title="Menu">
             <span className="menu-ico"><span /><span /><span /></span>
           </button>
@@ -552,6 +552,10 @@ function App(){
           <span>Munsell</span>
           <IcoChevron/>
         </button>
+        <button className={"handle"+(panel==="masters"?" on":"")} onClick={()=>togglePanel("masters")} aria-expanded={panel==="masters"}>
+          <span>Masters</span>
+          <IcoChevron/>
+        </button>
       </div>
 
       <Drawer open={panel==="pigments"} onClose={()=>setPanel(null)}
@@ -561,6 +565,7 @@ function App(){
         detailShown={detailShown} onDetailBack={()=>setDetailShown(false)} />
 
       {window.MunsellPanel && <window.MunsellPanel open={panel==="munsell"} onClose={()=>setPanel(null)} />}
+      {window.MastersDrawer && <window.MastersDrawer open={panel==="masters"} onClose={()=>setPanel(null)} />}
 
       <NavMenu open={menuOpen} onClose={()=>setMenuOpen(false)} />
     </div>
