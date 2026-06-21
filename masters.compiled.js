@@ -91,6 +91,9 @@ const MChev = () => /*#__PURE__*/React.createElement("svg", _extends({
   d: "m6 15 6-6 6 6"
 }));
 
+// Break date ranges with zero-width non-joiners so iOS/Safari data detectors don't linkify them
+const noLink = s => s == null ? s : String(s).replace(/([-–—])/g, '\u200C$1\u200C');
+
 /* ── era + artist data ── */
 const MDATA = [{
   id: 'northern',
@@ -1828,7 +1831,7 @@ function MastersDetail({
       style: {
         marginBottom: 4
       }
-    }, info.period), /*#__PURE__*/React.createElement("h3", null, /*#__PURE__*/React.createElement("span", {
+    }, noLink(info.period)), /*#__PURE__*/React.createElement("h3", null, /*#__PURE__*/React.createElement("span", {
       className: "colname"
     }, pigment.n)), /*#__PURE__*/React.createElement("dl", {
       className: "specs"
@@ -1905,9 +1908,9 @@ function MastersDetail({
       letterSpacing: '0.04em',
       whiteSpace: 'nowrap'
     }
-  }, artist.dates)), /*#__PURE__*/React.createElement("dl", {
+  }, noLink(artist.dates))), /*#__PURE__*/React.createElement("dl", {
     className: "specs"
-  }, /*#__PURE__*/React.createElement("dt", null, "Pigments"), /*#__PURE__*/React.createElement("dd", null, artist.pigments.length, " documented"), /*#__PURE__*/React.createElement("dt", null, "Period"), /*#__PURE__*/React.createElement("dd", null, era.period)), /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("dt", null, "Pigments"), /*#__PURE__*/React.createElement("dd", null, artist.pigments.length, " documented"), /*#__PURE__*/React.createElement("dt", null, "Period"), /*#__PURE__*/React.createElement("dd", null, noLink(era.period))), /*#__PURE__*/React.createElement("p", {
     className: "note",
     style: {
       marginTop: 'var(--s-4)'
@@ -2057,7 +2060,7 @@ function MastersDrawer({
     onClick: () => pickEra(i)
   }, e.label, /*#__PURE__*/React.createElement("span", {
     className: "tag"
-  }, e.period)))))), /*#__PURE__*/React.createElement("div", {
+  }, noLink(e.period))))))), /*#__PURE__*/React.createElement("div", {
     className: "families-wrap"
   }, /*#__PURE__*/React.createElement("button", {
     className: "fam-nav prev" + (showArtistLeft ? " show" : ""),
