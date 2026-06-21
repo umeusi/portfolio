@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Notan" subtitle="Upload a photo, read it in black & white, posterize to flat values, and crop to canvas ratios" viewport="1440x900" -->
+<html lang="en" class="theme-light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Y.Parris — Notan</title>
+<link rel="stylesheet" href="colors_and_type.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: rgb(226,226,226);
+    color: var(--fg1);
+    font-family: var(--font-serif);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app { position: relative; height: 100%; display: flex; flex-direction: column; }
+
+  /* ---------- Header ---------- */
+  .topbar {
+    position: relative; z-index: 30;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: calc(clamp(20px, 2.4vw, 30px) + 3px) calc(clamp(22px, 3vw, 44px) - 4px) 0;
+    gap: var(--s-6); pointer-events: none;
+  }
+  .topbar > * { pointer-events: auto; }
+  /* white tile that extends the side panel's background up behind the header */
+  .panel-cap {
+    position: absolute; top: 0; right: 0; width: 372px; height: 100%;
+    background: var(--bg); border-left: 1px solid var(--line);
+    z-index: -1; pointer-events: none;
+  }
+  .brandblock { display: flex; flex-direction: row; align-items: center; gap: 13px; }
+  .brand-emblem { display: inline-flex; }
+  .brand-emblem img { height: 26px; width: auto; display: block; }
+  .brand-div { font-family: var(--font-serif); font-size: 21px; font-weight: 300; color: var(--fg3); line-height: 1; }
+  .brand {
+    font-family: var(--font-serif); font-weight: 500; font-size: 20px;
+    letter-spacing: 0.30em; text-transform: uppercase; color: var(--fg1); line-height: 1;
+  }
+  .brand .dot { color: var(--primary); }
+  .studyline {
+    font-family: var(--font-serif); font-size: 20px; font-weight: 500;
+    letter-spacing: 0.30em; text-transform: uppercase; color: var(--fg1); line-height: 1;
+  }
+
+  /* ---------- Hamburger + nav (mirrors painters-tool) ---------- */
+  .menu-btn {
+    flex: none; width: 30px; height: 30px; display: grid; place-items: center;
+    border: none; background: none; color: var(--parris-navy); cursor: pointer;
+    transition: color var(--dur) var(--ease);
+  }
+  .menu-btn:hover { color: var(--primary); }
+  .menu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .menu-ico { width: 20px; height: 14px; position: relative; display: block; }
+  .menu-ico span {
+    position: absolute; left: 0; right: 0; height: 2px; border-radius: 2px;
+    background: currentColor; transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  }
+  .menu-ico span:nth-child(1) { top: 0; }
+  .menu-ico span:nth-child(2) { top: 50%; transform: translateY(-50%); }
+  .menu-ico span:nth-child(3) { bottom: 0; }
+
+  .navmenu { position: fixed; inset: 0; z-index: 120; pointer-events: none; }
+  .navmenu-panel {
+    position: absolute; inset: 0; background: var(--parris-navy); color: var(--parris-white);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity var(--dur) var(--ease), visibility var(--dur) var(--ease);
+  }
+  .navmenu.open { pointer-events: auto; }
+  .navmenu.open .navmenu-panel { opacity: 1; visibility: visible; }
+  .navmenu-close {
+    position: absolute; top: calc(clamp(20px, 2.4vw, 30px) + 7px); right: calc(clamp(22px, 3vw, 44px) - 4px);
+    width: 30px; height: 30px; display: grid; place-items: center; cursor: pointer;
+    background: none; border: none; color: rgba(250,248,244,0.82); transition: color var(--dur) var(--ease);
+  }
+  .navmenu-close:hover { color: var(--parris-white); }
+  .navmenu-close svg { width: 22px; height: 22px; }
+  .navmenu-nav { display: flex; flex-direction: column; align-items: center; }
+  .navmenu-link {
+    font-family: var(--font-serif); font-weight: 500; font-size: clamp(34px, 4.5vw, 50px);
+    line-height: 1.65; color: var(--parris-taupe); text-decoration: none; transition: color 0.2s var(--ease);
+  }
+  .navmenu-link:hover { color: var(--parris-gray); }
+  .navmenu-link.is-current { color: var(--parris-brown); }
+  .navmenu-rule { width: 96px; height: 1px; background: rgba(250,248,244,0.42); margin: 30px 0 24px; }
+  .navmenu-mail {
+    font-family: var(--font-serif); font-style: italic; font-size: 18px;
+    color: var(--parris-taupe); text-decoration: none; transition: color var(--dur) var(--ease);
+  }
+  .navmenu-mail:hover { color: var(--parris-gray); }
+
+  /* ---------- Body: stage + panel ---------- */
+  .work { flex: 1 1 auto; min-height: 0; display: flex; }
+
+  .stage {
+    flex: 1 1 auto; min-width: 0; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stage canvas { display: block; touch-action: none; cursor: grab; }
+  .stage canvas.dragging { cursor: grabbing; }
+
+  /* panel collapse — chevron tab attached to the panel edge */
+  .panel-toggle {
+    position: fixed; z-index: 115;
+    top: 50%; right: 372px; transform: translateY(-50%);
+    width: 22px; height: 54px; display: grid; place-items: center;
+    background: var(--surface); color: var(--fg2);
+    border: 1px solid var(--line); border-right: none;
+    border-radius: var(--r) 0 0 var(--r);
+    box-shadow: -3px 0 8px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+  }
+  .panel-toggle:hover { color: var(--primary); background: var(--bg-2); }
+  .panel-toggle svg { width: 15px; height: 15px; }
+  .panel-toggle .ico-expand { display: none; }
+  .app.panel-hidden .panel-toggle { right: 0; }   /* tab pinned to viewport edge */
+  .app.panel-hidden .panel-toggle .ico-collapse { display: none; }
+  .app.panel-hidden .panel-toggle .ico-expand { display: block; }
+  .app.panel-hidden .panel { display: none; }
+  .app.panel-hidden .panel-cap { display: none; }
+  .app.panel-hidden .stage-hint { display: none; }
+  .app.panel-hidden .stage canvas { cursor: default; }
+
+  /* empty / drop state */
+  .dropzone {
+    position: absolute; inset: clamp(24px, 5vw, 80px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: var(--s-5); text-align: center; border: 1.5px dashed var(--line-strong);
+    border-radius: var(--r); color: var(--fg2); background: rgba(255,255,255,0.35);
+    transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  }
+  .dropzone.hover { border-color: var(--accent); background: rgba(12,56,234,0.05); }
+  .dropzone.hidden { display: none; }
+  .dz-ico { width: 46px; height: 46px; color: var(--fg3); }
+  .dz-title { font-family: var(--font-serif); font-size: 24px; color: var(--fg1); }
+  .dz-sub { font-family: var(--font-sans); font-size: 12.5px; letter-spacing: 0.04em; color: var(--fg3); }
+
+  .stage-hint {
+    position: absolute; left: 50%; bottom: var(--s-6); transform: translateX(-50%);
+    font-family: var(--font-sans); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--fg3); pointer-events: none; white-space: nowrap;
+    background: rgba(250,248,244,0.7); padding: 5px 12px; border: 1px solid var(--line);
+    border-radius: var(--r-pill); backdrop-filter: blur(3px);
+  }
+
+  /* ---------- Control panel ---------- */
+  .panel {
+    flex: 0 0 372px; width: 372px; border-left: 1px solid var(--line);
+    background: var(--bg); overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+  .sect { padding: var(--s-6) var(--s-8); border-bottom: 1px solid var(--line); }
+  .sect:last-child { border-bottom: none; }
+  .sect-head {
+    display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--s-4);
+  }
+  .sect-title {
+    font-family: var(--font-sans); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg3);
+  }
+  .sect-val {
+    font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.06em; color: var(--fg1);
+  }
+
+  /* upload button */
+  .upload-btn {
+    display: flex; align-items: center; justify-content: center; gap: var(--s-3); width: 100%;
+    height: 44px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg1);
+    border-radius: var(--r); cursor: pointer; font-family: var(--font-sans); font-size: 12px;
+    font-weight: 500; letter-spacing: 0.10em; text-transform: uppercase;
+    transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .upload-btn:hover { border-color: var(--ink); color: var(--primary); }
+  .upload-btn svg { width: 17px; height: 17px; }
+  .filename {
+    margin-top: 10px; font-family: var(--font-sans); font-size: 11px; color: var(--fg3);
+    letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .privacy-note {
+    display: flex; gap: 9px; margin-top: 14px; padding: 11px 12px;
+    border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg-2);
+  }
+  .privacy-note svg { width: 15px; height: 15px; flex: none; margin-top: 1px; color: var(--fg2); }
+  .privacy-note p {
+    font-family: var(--font-sans); font-size: 10.5px; line-height: 1.5;
+    letter-spacing: 0.01em; color: var(--fg3);
+  }
+
+  /* segmented toggle */
+  .seg { display: flex; padding: 3px; border: 1px solid var(--line); background: var(--bg-2); border-radius: var(--r); }
+  .segbtn {
+    flex: 1; height: 34px; border: none; background: transparent; border-radius: 3px; cursor: pointer;
+    font-family: var(--font-sans); font-size: 11.5px; font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--fg2);
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .segbtn:hover:not(.on) { color: var(--fg1); }
+  .segbtn.on { background: var(--ink); color: var(--parris-white); }
+
+  /* value-step chips */
+  .steps { display: flex; gap: var(--s-2); }
+  .stepbtn {
+    flex: 1; height: 38px; border: 1px solid var(--line); background: var(--surface); cursor: pointer;
+    border-radius: var(--r-sm); font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+    color: var(--fg2); transition: all var(--dur) var(--ease);
+  }
+  .stepbtn:hover:not(.on) { border-color: var(--line-strong); color: var(--fg1); }
+  .stepbtn.on { background: var(--ink); color: var(--parris-white); border-color: var(--ink); }
+  .step-cap {
+    margin-top: 9px; font-family: var(--font-sans); font-size: 10.5px; letter-spacing: 0.04em;
+    color: var(--fg3); line-height: 1.45;
+  }
+
+  /* value scale legend */
+  .vscale { display: flex; margin-top: var(--s-4); border: 1px solid var(--line-strong); border-radius: var(--r-sm); overflow: hidden; height: 30px; }
+  .vscale i { flex: 1; display: block; }
+
+  /* grid color swatches */
+  .gridcolors { display: flex; gap: var(--s-2); margin-top: var(--s-4); }
+  .swatch {
+    width: 18px; height: 18px; border-radius: 50%; cursor: pointer; padding: 0;
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 0 0 0 transparent; transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .swatch:hover { transform: scale(1.12); }
+  .swatch.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--ink); }
+
+  /* sliders */
+  .slider-row { margin-top: var(--s-4); }
+  .slider-row:first-child { margin-top: 0; }
+  .slider-lab {
+    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px;
+    font-family: var(--font-sans); font-size: 11px; letter-spacing: 0.06em; color: var(--fg2);
+  }
+  .slider-lab b { color: var(--fg1); font-weight: 600; }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: var(--line-strong);
+    border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--surface); border: 1.5px solid var(--ink); box-shadow: var(--shadow-1); cursor: grab;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%; background: var(--surface);
+    border: 1.5px solid var(--ink); box-shadow: var(--shadow-1); cursor: grab;
+  }
+
+  /* ratio grid */
+  .orient { margin-bottom: var(--s-4); }
+  .ratios { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-2); }
+  .ratio {
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    padding: 11px 6px 9px; border: 1px solid var(--line); background: var(--surface); cursor: pointer;
+    border-radius: var(--r-sm); transition: all var(--dur) var(--ease);
+  }
+  .ratio:hover:not(.on) { border-color: var(--line-strong); }
+  .ratio.on { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .ratio-fig { width: 30px; height: 30px; display: grid; place-items: center; }
+  .ratio-box { background: var(--bg-3); box-shadow: inset 0 0 0 1px var(--line-strong); border-radius: 1px; }
+  .ratio.on .ratio-box { background: var(--primary); box-shadow: none; }
+  .ratio-name { font-family: var(--font-sans); font-size: 12px; font-weight: 600; color: var(--fg1); line-height: 1; }
+  .ratio-eg { font-family: var(--font-sans); font-size: 9.5px; letter-spacing: 0.02em; color: var(--fg3); line-height: 1; }
+  .ratio.on .ratio-name { color: var(--primary); }
+
+  /* export */
+  .actions { display: flex; flex-direction: column; gap: var(--s-3); }
+  .btn-primary {
+    display: flex; align-items: center; justify-content: center; gap: var(--s-3); width: 100%;
+    height: 46px; border: none; background: var(--ink); color: var(--parris-white); cursor: pointer;
+    border-radius: var(--r); font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase; transition: background var(--dur) var(--ease);
+  }
+  .btn-primary:hover { background: var(--parris-navy-700); }
+  .btn-primary svg { width: 17px; height: 17px; }
+  .btn-ghost {
+    display: flex; align-items: center; justify-content: center; gap: var(--s-2); width: 100%;
+    height: 40px; border: 1px solid var(--line); background: transparent; color: var(--fg2); cursor: pointer;
+    border-radius: var(--r); font-family: var(--font-sans); font-size: 11.5px; font-weight: 500;
+    letter-spacing: 0.10em; text-transform: uppercase; transition: all var(--dur) var(--ease);
+  }
+  .btn-ghost:hover { border-color: var(--line-strong); color: var(--fg1); }
+  .btn-ghost svg { width: 15px; height: 15px; }
+
+  .disabled { opacity: 0.4; pointer-events: none; }
+
+  /* mobile */
+  @media (max-width: 880px) {
+    body { overflow: hidden; }
+    .app { height: 100%; }
+    .work { flex-direction: column; }
+    /* preview stays fixed at top, panel scrolls within its own area */
+    .stage { height: 52vh; min-height: 280px; flex: none; }
+    .panel {
+      flex: 1 1 auto; width: 100%; min-height: 0;
+      border-left: none; border-top: 1px solid var(--line); overflow-y: auto;
+    }
+    .panel-cap { display: none; }
+    .stage-hint {
+      white-space: normal; text-align: center; max-width: 270px;
+      font-size: 9px; letter-spacing: 0.04em; line-height: 1.5;
+      border-radius: var(--r);
+    }
+    /* tab attached to the top edge of the panel; flips to bottom of screen when collapsed */
+    .panel-toggle {
+      top: 52vh; right: 50%; transform: translate(50%, -100%);
+      width: 54px; height: 22px;
+      border: 1px solid var(--line); border-bottom: none;
+      border-radius: var(--r) var(--r) 0 0;
+      box-shadow: 0 -3px 8px rgba(0,0,0,0.05);
+    }
+    .panel-toggle svg { transform: rotate(90deg); }
+    .app.panel-hidden .stage { height: 100%; }
+    .app.panel-hidden .panel-toggle {
+      top: auto; bottom: 0; right: 50%; transform: translate(50%, 0);
+    }
+  }
+</style>
+</head>
+<template id="__bundler_thumbnail" data-bg-color="#1A2138">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#1A2138"/>
+    <rect x="430" y="180" width="340" height="440" fill="#E8E0D3"/>
+    <rect x="430" y="180" width="340" height="110" fill="#FAF8F4"/>
+    <rect x="430" y="290" width="340" height="110" fill="#B89B83"/>
+    <rect x="430" y="400" width="340" height="110" fill="#5A5246"/>
+    <rect x="430" y="510" width="340" height="110" fill="#231B11"/>
+    <text x="600" y="710" text-anchor="middle" font-family="serif" font-size="46" fill="rgba(250,248,244,0.55)" letter-spacing="10">NOTAN</text>
+  </svg>
+</template>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <header class="topbar">
+    <div class="panel-cap"></div>
+    <div class="brandblock">
+      <a class="brand-emblem" href="index.html" aria-label="Y.Parris — home"><img src="assets/emblem_brown.png" alt="Y.Parris" /></a>
+      <span class="brand-div" aria-hidden="true">|</span>
+      <span class="studyline">Notan</span>
+    </div>
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+      <span class="menu-ico"><span></span><span></span><span></span></span>
+    </button>
+  </header>
+
+  <!-- Work area -->
+  <div class="work">
+    <div class="stage" id="stage">
+      <canvas id="canvas"></canvas>
+      <div class="dropzone" id="dropzone">
+        <svg class="dz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="m21 15-5-5L5 21"/>
+        </svg>
+        <div>
+          <div class="dz-title">Drop a photo to study</div>
+          <div class="dz-sub">or click to browse &middot; JPG, PNG, WEBP</div>
+        </div>
+      </div>
+      <div class="stage-hint" id="stageHint" style="display:none;">Drag to reposition the crop</div>
+    </div>
+
+    <!-- Panel -->
+    <aside class="panel">
+
+      <section class="sect">
+        <div class="sect-head"><span class="sect-title">Source</span></div>
+        <button class="upload-btn" id="uploadBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>
+          </svg>
+          Upload photo
+        </button>
+        <div class="filename" id="filename">Sample — carved mask</div>
+        <input type="file" id="fileInput" accept="image/*" hidden />
+        <div class="privacy-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+          </svg>
+          <p>Your photo stays on this device. It is read and edited entirely in your browser — never uploaded, stored, or sent to any server. Closing this tab clears it.</p>
+        </div>
+      </section>
+
+      <section class="sect" id="ctlSect">
+        <div class="sect-head"><span class="sect-title">Rendering</span></div>
+        <div class="seg" id="modeSeg">
+          <button class="segbtn on" data-mode="bw">Black &amp; White</button>
+          <button class="segbtn" data-mode="color">Color</button>
+        </div>
+      </section>
+
+      <section class="sect">
+        <div class="sect-head">
+          <span class="sect-title">Value steps</span>
+          <span class="sect-val" id="stepsVal">4 values</span>
+        </div>
+        <div class="steps" id="steps">
+          <button class="stepbtn" data-n="0">&infin;</button>
+          <button class="stepbtn" data-n="2">2</button>
+          <button class="stepbtn" data-n="3">3</button>
+          <button class="stepbtn on" data-n="4">4</button>
+          <button class="stepbtn" data-n="5">5</button>
+          <button class="stepbtn" data-n="6">6</button>
+        </div>
+        <div class="step-cap">Posterize the photo into flat value blocks — the way a painter blocks in a notan study.</div>
+        <div class="vscale" id="vscale"></div>
+      </section>
+
+      <section class="sect">
+        <div class="sect-head"><span class="sect-title">Adjust</span></div>
+        <div class="slider-row">
+          <div class="slider-lab"><span>Contrast</span><b id="contrastVal">0</b></div>
+          <input type="range" id="contrast" min="-60" max="80" value="0" />
+        </div>
+        <div class="slider-row">
+          <div class="slider-lab"><span>Brightness</span><b id="brightVal">0</b></div>
+          <input type="range" id="bright" min="-60" max="60" value="0" />
+        </div>
+      </section>
+
+      <section class="sect">
+        <div class="sect-head">
+          <span class="sect-title">Canvas crop</span>
+          <span class="sect-val" id="cropVal">4 : 5</span>
+        </div>
+        <div class="seg orient" id="orientSeg">
+          <button class="segbtn on" data-orient="portrait">Portrait</button>
+          <button class="segbtn" data-orient="landscape">Landscape</button>
+        </div>
+        <div class="ratios" id="ratios"></div>
+        <div class="slider-row" id="zoomRow">
+          <div class="slider-lab"><span>Zoom</span><b id="zoomVal">1.0&times;</b></div>
+          <input type="range" id="zoom" min="30" max="320" value="100" />
+        </div>
+      </section>
+
+      <section class="sect">
+        <div class="sect-head"><span class="sect-title">Grid overlay</span></div>
+        <div class="seg" id="gridSeg">
+          <button class="segbtn on" data-grid="thirds">Thirds</button>
+          <button class="segbtn" data-grid="2">2&times;2</button>
+          <button class="segbtn" data-grid="3">3&times;3</button>
+          <button class="segbtn" data-grid="4">4&times;4</button>
+          <button class="segbtn" data-grid="0">Off</button>
+        </div>
+        <div class="step-cap">Overlay a grid to transfer proportions onto your canvas.</div>
+        <div class="gridcolors" id="gridColors"></div>
+      </section>
+
+      <section class="sect">
+        <div class="actions">
+          <button class="btn-primary" id="downloadBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>
+            </svg>
+            Download study
+          </button>
+          <button class="btn-ghost" id="resetBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>
+            </svg>
+            Reset adjustments
+          </button>
+        </div>
+      </section>
+
+    </aside>
+  </div>
+
+  <button class="panel-toggle" id="panelToggle" aria-label="Hide panel" title="Hide panel">
+    <svg class="ico-collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    <svg class="ico-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+  </button>
+</div>
+
+<!-- Nav overlay -->
+<nav class="navmenu" id="navmenu">
+  <div class="navmenu-panel">
+    <button class="navmenu-close" id="navClose" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="navmenu-nav">
+      <a class="navmenu-link" href="works.html">Works</a>
+      <a class="navmenu-link" href="sketches.html">Sketches</a>
+      <a class="navmenu-link" href="about.html">About</a>
+      <a class="navmenu-link" href="painters-tool.html">Painter&rsquo;s Tool</a>
+      <a class="navmenu-link is-current" href="notan.html">Notan</a>
+    </div>
+    <div class="navmenu-rule"></div>
+    <a class="navmenu-mail" href="mailto:info@yumiparris.com">info@yumiparris.com</a>
+  </div>
+</nav>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Elements ----------
+  var stage = document.getElementById('stage');
+  var canvas = document.getElementById('canvas');
+  var ctx = canvas.getContext('2d');
+  var dropzone = document.getElementById('dropzone');
+  var stageHint = document.getElementById('stageHint');
+  var fileInput = document.getElementById('fileInput');
+  var filenameEl = document.getElementById('filename');
+
+  // ---------- State ----------
+  var state = {
+    mode: 'bw',        // 'bw' | 'color'
+    steps: 4,          // 0 = continuous, else number of value bands
+    contrast: 0,
+    brightness: 0,
+    ratio: { w: 4, h: 5 },   // null = free
+    free: null,        // {x,y,w,h} normalized [0..1], used only in Free mode
+    orient: 'portrait',
+    grid: 'thirds',    // 'thirds' | 2 | 3 | 4 | 0 (off)
+    gridColor: 'rgba(12,56,234,0.78)',   // visible on light & dark
+    zoom: 1,           // >= 1
+    cx: 0.5, cy: 0.5   // crop centre, normalized to image
+  };
+
+  var img = null;
+  var imgName = 'value-study';
+  // layout cache (CSS px)
+  var view = { fit: 1, offX: 0, offY: 0, dispW: 0, dispH: 0 };
+  var off = document.createElement('canvas');  // filtered display-scale buffer
+  var offc = off.getContext('2d');
+
+  // ---------- Ratio presets ----------
+  var RATIOS = [
+    { w: 1, h: 1, name: '1:1',  eg: '24×24' },
+    { w: 4, h: 5, name: '4:5',  eg: '16×20' },
+    { w: 3, h: 4, name: '3:4',  eg: '18×24' },
+    { w: 2, h: 3, name: '2:3',  eg: '24×36' },
+    { w: 5, h: 7, name: '5:7',  eg: '10×14' },
+    { w: 0, h: 0, name: 'Free', eg: 'source' }
+  ];
+
+  function activeRatio() {
+    if (!state.ratio) return null;
+    var r = state.ratio;
+    if (r.w === r.h) return { w: 1, h: 1 };
+    if (state.orient === 'landscape') return { w: Math.max(r.w, r.h), h: Math.min(r.w, r.h) };
+    return { w: Math.min(r.w, r.h), h: Math.max(r.w, r.h) };
+  }
+
+  // ---------- Build ratio UI ----------
+  var ratiosEl = document.getElementById('ratios');
+  RATIOS.forEach(function (r) {
+    var b = document.createElement('button');
+    b.className = 'ratio' + ((state.ratio && r.w === state.ratio.w && r.h === state.ratio.h) ? ' on' : '');
+    b.dataset.w = r.w; b.dataset.h = r.h;
+    var fig = document.createElement('span'); fig.className = 'ratio-fig';
+    var box = document.createElement('span'); box.className = 'ratio-box';
+    sizeRatioBox(box, r);
+    fig.appendChild(box);
+    var nm = document.createElement('span'); nm.className = 'ratio-name'; nm.textContent = r.name;
+    var eg = document.createElement('span'); eg.className = 'ratio-eg'; eg.textContent = r.eg;
+    b.appendChild(fig); b.appendChild(nm); b.appendChild(eg);
+    b.addEventListener('click', function () {
+      if (r.w === 0) {
+        var cur = cropRect();
+        state.ratio = null;
+        if (cur && img) {
+          state.free = { x: cur.x / img.naturalWidth, y: cur.y / img.naturalHeight,
+                         w: cur.w / img.naturalWidth, h: cur.h / img.naturalHeight };
+        }
+      } else {
+        state.ratio = { w: r.w, h: r.h };
+      }
+      [].forEach.call(ratiosEl.children, function (c) { c.classList.remove('on'); });
+      b.classList.add('on');
+      updateCropLabel();
+      clampCentre(); layout(); render();
+    });
+    ratiosEl.appendChild(b);
+  });
+
+  function sizeRatioBox(box, r) {
+    var max = 26;
+    if (r.w === 0) { box.style.width = max + 'px'; box.style.height = (max * 0.72) + 'px'; return; }
+    var ar = orientedAR(r);
+    var w, h;
+    if (ar >= 1) { w = max; h = max / ar; } else { h = max; w = max * ar; }
+    box.style.width = Math.round(w) + 'px';
+    box.style.height = Math.round(h) + 'px';
+  }
+  function orientedAR(r) {
+    if (r.w === r.h) return 1;
+    return state.orient === 'landscape' ? Math.max(r.w, r.h) / Math.min(r.w, r.h)
+                                        : Math.min(r.w, r.h) / Math.max(r.w, r.h);
+  }
+  function refreshRatioBoxes() {
+    [].forEach.call(ratiosEl.children, function (b, i) {
+      sizeRatioBox(b.querySelector('.ratio-box'), RATIOS[i]);
+    });
+  }
+
+  // ---------- Crop geometry (in source px) ----------
+  // Largest rect of given AR inside image, then divided by zoom.
+  function cropRect() {
+    if (!img) return null;
+    var iw = img.naturalWidth, ih = img.naturalHeight;
+    var ar = activeRatio();
+    if (!ar) {
+      var fr = state.free || (state.free = { x: 0, y: 0, w: 1, h: 1 });
+      return { x: fr.x * iw, y: fr.y * ih, w: fr.w * iw, h: fr.h * ih };
+    }
+    var cw, ch;
+    var a = ar.w / ar.h;
+    if (a >= iw / ih) { cw = iw; ch = iw / a; }
+    else { ch = ih; cw = ih * a; }
+    cw /= state.zoom; ch /= state.zoom;
+    var cx = state.cx * iw, cy = state.cy * ih;
+    return { x: cx - cw / 2, y: cy - ch / 2, w: cw, h: ch };
+  }
+
+  function clampCentre() {
+    if (!img) return;
+    var cr = cropRect();
+    if (!cr) return;
+    var iw = img.naturalWidth, ih = img.naturalHeight;
+    if (!activeRatio()) {
+      state.free = { x: cr.x / iw, y: cr.y / ih, w: cr.w / iw, h: cr.h / ih };
+    } else {
+      state.cx = (cr.x + cr.w / 2) / iw;
+      state.cy = (cr.y + cr.h / 2) / ih;
+    }
+  }
+
+  // crop rect in screen (CSS) px
+  function cropScreen() {
+    var cr = cropRect();
+    if (!cr) return null;
+    return { fx: view.offX + cr.x * view.fit, fy: view.offY + cr.y * view.fit,
+             sw: cr.w * view.fit, sh: cr.h * view.fit };
+  }
+  // which corner is near (px,py canvas px): 0 TL,1 TR,2 BL,3 BR, -1 none
+  function hitCorner(px, py) {
+    var s = cropScreen(); if (!s) return -1;
+    var thr = 18;
+    var pts = [[s.fx, s.fy], [s.fx + s.sw, s.fy], [s.fx, s.fy + s.sh], [s.fx + s.sw, s.fy + s.sh]];
+    for (var i = 0; i < 4; i++) {
+      if (Math.abs(px - pts[i][0]) <= thr && Math.abs(py - pts[i][1]) <= thr) return i;
+    }
+    return -1;
+  }
+  // resize free rect by moving one corner to source-px point (sxp, syp)
+  function resizeFree(corner, sxp, syp) {
+    var iw = img.naturalWidth, ih = img.naturalHeight;
+    var cr = cropRect();
+    var left = cr.x, top = cr.y, right = cr.x + cr.w, bottom = cr.y + cr.h;
+    var minS = 40;
+    if (corner === 0) { left = Math.min(sxp, right - minS); top = Math.min(syp, bottom - minS); }
+    else if (corner === 1) { right = Math.max(sxp, left + minS); top = Math.min(syp, bottom - minS); }
+    else if (corner === 2) { left = Math.min(sxp, right - minS); bottom = Math.max(syp, top + minS); }
+    else { right = Math.max(sxp, left + minS); bottom = Math.max(syp, top + minS); }
+    state.free = { x: left / iw, y: top / ih, w: (right - left) / iw, h: (bottom - top) / ih };
+  }
+  // resize fixed-ratio crop by dragging a corner; opposite corner stays anchored, AR locked
+  function resizeFixed(corner, sxp, syp) {
+    var iw = img.naturalWidth, ih = img.naturalHeight;
+    var ar = activeRatio();
+    var a = ar.w / ar.h;
+    var baseW = (a >= iw / ih) ? iw : ih * a;
+    var cr = cropRect();
+    var left = cr.x, top = cr.y, right = cr.x + cr.w, bottom = cr.y + cr.h;
+    var anchorX = (corner === 0 || corner === 2) ? right : left;
+    var anchorY = (corner === 0 || corner === 1) ? bottom : top;
+    var dirX = (corner === 0 || corner === 2) ? -1 : 1;
+    var dirY = (corner === 0 || corner === 1) ? -1 : 1;
+    // desired width from pointer, driven by whichever axis pulls more
+    var wByX = Math.abs(sxp - anchorX);
+    var wByY = Math.abs(syp - anchorY) * a;
+    var newW = Math.max(wByX, wByY);
+    // bounds: stay inside image from the anchor, AR-fit max, and zoom range [1, 3.2]
+    var maxW = baseW * 3;
+    var lowerW = 40;
+    newW = Math.min(Math.max(newW, lowerW), maxW);
+    var newH = newW / a;
+    var x = anchorX + (dirX < 0 ? -newW : 0);
+    var y = anchorY + (dirY < 0 ? -newH : 0);
+    state.zoom = baseW / newW;
+    state.cx = (x + newW / 2) / iw;
+    state.cy = (y + newH / 2) / ih;
+    zoomEl.value = Math.round(Math.min(320, Math.max(30, state.zoom * 100)));
+    document.getElementById('zoomVal').textContent = state.zoom.toFixed(1) + '\u00d7';
+  }
+
+  // ---------- Pixel filter ----------
+  function filterImageData(id) {
+    var d = id.data;
+    var c = state.contrast;
+    var cf = (259 * (c + 255)) / (255 * (259 - c)); // contrast factor
+    var br = state.brightness * 2.0;                // brightness offset
+    var steps = state.steps;
+    var bw = state.mode === 'bw';
+    for (var i = 0; i < d.length; i += 4) {
+      var r = d[i], g = d[i + 1], b = d[i + 2];
+      // brightness
+      r += br; g += br; b += br;
+      // contrast
+      r = cf * (r - 128) + 128;
+      g = cf * (g - 128) + 128;
+      b = cf * (b - 128) + 128;
+      if (bw) {
+        var v = 0.299 * r + 0.587 * g + 0.114 * b;
+        if (steps > 1) v = Math.round((v / 255) * (steps - 1)) / (steps - 1) * 255;
+        r = g = b = v;
+      } else if (steps > 1) {
+        r = Math.round((clamp255(r) / 255) * (steps - 1)) / (steps - 1) * 255;
+        g = Math.round((clamp255(g) / 255) * (steps - 1)) / (steps - 1) * 255;
+        b = Math.round((clamp255(b) / 255) * (steps - 1)) / (steps - 1) * 255;
+      }
+      d[i] = clamp255(r); d[i + 1] = clamp255(g); d[i + 2] = clamp255(b);
+    }
+    return id;
+  }
+  function clamp255(x) { return x < 0 ? 0 : (x > 255 ? 255 : x); }
+
+  // ---------- Layout ----------
+  function layout() {
+    var dpr = window.devicePixelRatio || 1;
+    var w = stage.clientWidth, h = stage.clientHeight;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (!img) return;
+    var iw = img.naturalWidth, ih = img.naturalHeight;
+    var pad = Math.min(w, h) * 0.07 + 18;
+    // fit the union of the image and the (possibly larger) crop so the frame stays visible
+    var cr = cropRect();
+    var minX = 0, minY = 0, maxX = iw, maxY = ih;
+    if (cr) {
+      minX = Math.min(minX, cr.x); minY = Math.min(minY, cr.y);
+      maxX = Math.max(maxX, cr.x + cr.w); maxY = Math.max(maxY, cr.y + cr.h);
+    }
+    var uw = maxX - minX, uh = maxY - minY;
+    var fit = Math.min((w - pad * 2) / uw, (h - pad * 2) / uh);
+    view.fit = fit;
+    view.dispW = iw * fit; view.dispH = ih * fit;
+    // centre the union, then place the image's origin within it
+    var uOffX = (w - uw * fit) / 2, uOffY = (h - uh * fit) / 2;
+    view.offX = uOffX - minX * fit;
+    view.offY = uOffY - minY * fit;
+  }
+
+  // ---------- Render ----------
+  function render() {
+    var w = stage.clientWidth, h = stage.clientHeight;
+    ctx.clearRect(0, 0, w, h);
+    if (!img) return;
+
+    // draw image to off-buffer at display scale, then filter
+    var bw = Math.max(1, Math.round(view.dispW));
+    var bh = Math.max(1, Math.round(view.dispH));
+    if (off.width !== bw || off.height !== bh) { off.width = bw; off.height = bh; }
+    offc.clearRect(0, 0, bw, bh);
+    offc.drawImage(img, 0, 0, bw, bh);
+    try {
+      var id = offc.getImageData(0, 0, bw, bh);
+      filterImageData(id);
+      offc.putImageData(id, 0, 0);
+    } catch (e) { /* tainted canvas guard */ }
+
+    var ox = view.offX, oy = view.offY, fit = view.fit;
+    var cr = cropRect();
+
+    // collapsed: show only the cropped-out result, fitted & centered
+    if (appEl && appEl.classList.contains('panel-hidden')) {
+      var csx = cr.x * fit, csy = cr.y * fit, csw = cr.w * fit, csh = cr.h * fit;
+      var pad2 = Math.min(w, h) * 0.06 + 16;
+      var sc = Math.min((w - pad2 * 2) / csw, (h - pad2 * 2) / csh);
+      var dw = csw * sc, dh = csh * sc;
+      var dx = (w - dw) / 2, dy = (h - dh) / 2;
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.20)'; ctx.shadowBlur = 26; ctx.shadowOffsetY = 10;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(dx, dy, dw, dh);
+      ctx.restore();
+      ctx.save();
+      ctx.beginPath(); ctx.rect(dx, dy, dw, dh); ctx.clip();
+      ctx.drawImage(off, dx - csx * sc, dy - csy * sc, view.dispW * sc, view.dispH * sc);
+      ctx.restore();
+      return;
+    }
+
+    // dim full image
+    ctx.globalAlpha = 0.30;
+    ctx.drawImage(off, ox, oy, view.dispW, view.dispH);
+    ctx.globalAlpha = 1;
+
+    // bright crop region (image where present, white canvas beyond image edges)
+    var sx = cr.x * fit, sy = cr.y * fit, sw = cr.w * fit, sh = cr.h * fit;
+    var bfx = ox + sx, bfy = oy + sy;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(bfx, bfy, sw, sh); ctx.clip();
+    ctx.fillStyle = '#fff'; ctx.fillRect(bfx, bfy, sw, sh);
+    ctx.drawImage(off, ox, oy, view.dispW, view.dispH);
+    ctx.restore();
+
+    // crop frame
+    var fx = ox + sx, fy = oy + sy;
+    ctx.strokeStyle = 'rgba(250,248,244,0.95)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(fx + 0.5, fy + 0.5, sw, sh);
+    // outer subtle stroke for contrast on light areas
+    ctx.strokeStyle = 'rgba(17,17,17,0.35)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(fx - 0.5, fy - 0.5, sw + 2, sh + 2);
+
+    // grid overlay
+    if (state.grid !== 0) {
+      ctx.strokeStyle = state.gridColor;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      if (state.grid === 'thirds') {
+        for (var k = 1; k <= 2; k++) {
+          ctx.moveTo(fx + sw * k / 3, fy); ctx.lineTo(fx + sw * k / 3, fy + sh);
+          ctx.moveTo(fx, fy + sh * k / 3); ctx.lineTo(fx + sw, fy + sh * k / 3);
+        }
+      } else {
+        var n = state.grid;
+        for (var gi = 1; gi < n; gi++) {
+          ctx.moveTo(fx + sw * gi / n, fy); ctx.lineTo(fx + sw * gi / n, fy + sh);
+          ctx.moveTo(fx, fy + sh * gi / n); ctx.lineTo(fx + sw, fy + sh * gi / n);
+        }
+      }
+      ctx.stroke();
+    }
+
+    // corner ticks
+    ctx.strokeStyle = 'rgba(250,248,244,0.98)';
+    ctx.lineWidth = 2.5;
+    var t = Math.min(16, sw / 4, sh / 4);
+    var corners = [[fx, fy, 1, 1], [fx + sw, fy, -1, 1], [fx, fy + sh, 1, -1], [fx + sw, fy + sh, -1, -1]];
+    ctx.beginPath();
+    corners.forEach(function (c) {
+      ctx.moveTo(c[0], c[1] + c[3] * t); ctx.lineTo(c[0], c[1]); ctx.lineTo(c[0] + c[2] * t, c[1]);
+    });
+    ctx.stroke();
+
+    // corner handles (both modes are resizable)
+    var hs = 10;
+    ctx.fillStyle = 'rgba(250,248,244,0.98)';
+    ctx.strokeStyle = 'rgba(17,17,17,0.55)';
+    ctx.lineWidth = 1;
+    [[fx, fy], [fx + sw, fy], [fx, fy + sh], [fx + sw, fy + sh]].forEach(function (p) {
+      ctx.fillRect(p[0] - hs / 2, p[1] - hs / 2, hs, hs);
+      ctx.strokeRect(p[0] - hs / 2 + 0.5, p[1] - hs / 2 + 0.5, hs, hs);
+    });
+  }
+  function renderScale() {
+    var el = document.getElementById('vscale');
+    el.innerHTML = '';
+    var n = state.steps > 1 ? state.steps : 7;
+    for (var i = 0; i < n; i++) {
+      var v = Math.round((i / (n - 1)) * 255);
+      var cell = document.createElement('i');
+      cell.style.background = 'rgb(' + v + ',' + v + ',' + v + ')';
+      el.appendChild(cell);
+    }
+  }
+
+  // ---------- Image loading ----------
+  function loadImage(src, name) {
+    var im = new Image();
+    im.onload = function () {
+      img = im;
+      imgName = (name || 'value-study').replace(/\.[^.]+$/, '');
+      dropzone.classList.add('hidden');
+      stageHint.style.display = '';
+      state.cx = 0.5; state.cy = 0.5;
+      layout(); render();
+    };
+    im.onerror = function () { filenameEl.textContent = 'Could not load image'; };
+    im.src = src;
+  }
+
+  function handleFile(file) {
+    if (!file || !/^image\//.test(file.type)) return;
+    var url = URL.createObjectURL(file);
+    filenameEl.textContent = file.name;
+    loadImage(url, file.name);
+  }
+
+  // ---------- Wiring: source ----------
+  document.getElementById('uploadBtn').addEventListener('click', function () { fileInput.click(); });
+  dropzone.addEventListener('click', function () { fileInput.click(); });
+  fileInput.addEventListener('change', function (e) { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    stage.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.add('hover'); dropzone.classList.remove('hidden'); if (img) dropzone.classList.add('hidden'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    stage.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.remove('hover'); if (img) dropzone.classList.add('hidden'); });
+  });
+  stage.addEventListener('drop', function (e) {
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+
+  // ---------- Wiring: rendering mode ----------
+  document.getElementById('modeSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('.segbtn'); if (!b) return;
+    state.mode = b.dataset.mode;
+    [].forEach.call(this.children, function (c) { c.classList.toggle('on', c === b); });
+    render();
+  });
+
+  // ---------- Wiring: value steps ----------
+  document.getElementById('steps').addEventListener('click', function (e) {
+    var b = e.target.closest('.stepbtn'); if (!b) return;
+    state.steps = parseInt(b.dataset.n, 10);
+    [].forEach.call(this.children, function (c) { c.classList.toggle('on', c === b); });
+    document.getElementById('stepsVal').textContent = state.steps > 1 ? state.steps + ' values' : 'Continuous';
+    renderScale(); render();
+  });
+
+  // ---------- Wiring: adjust ----------
+  var contrastEl = document.getElementById('contrast');
+  contrastEl.addEventListener('input', function () {
+    state.contrast = parseInt(this.value, 10);
+    document.getElementById('contrastVal').textContent = (state.contrast > 0 ? '+' : '') + state.contrast;
+    render();
+  });
+  var brightEl = document.getElementById('bright');
+  brightEl.addEventListener('input', function () {
+    state.brightness = parseInt(this.value, 10);
+    document.getElementById('brightVal').textContent = (state.brightness > 0 ? '+' : '') + state.brightness;
+    render();
+  });
+
+  // ---------- Wiring: orientation ----------
+  document.getElementById('orientSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('.segbtn'); if (!b) return;
+    state.orient = b.dataset.orient;
+    [].forEach.call(this.children, function (c) { c.classList.toggle('on', c === b); });
+    refreshRatioBoxes(); updateCropLabel(); clampCentre(); layout(); render();
+  });
+
+  // ---------- Wiring: grid ----------
+  document.getElementById('gridSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('.segbtn'); if (!b) return;
+    var g = b.dataset.grid;
+    state.grid = (g === 'thirds') ? 'thirds' : parseInt(g, 10);
+    [].forEach.call(this.children, function (c) { c.classList.toggle('on', c === b); });
+    render();
+  });
+
+  // ---------- Grid color swatches ----------
+  var GRID_COLORS = [
+    { name: 'Ultramarine', solid: '#0C38EA', stroke: 'rgba(12,56,234,0.78)' },
+    { name: 'Vermilion',   solid: '#D6312B', stroke: 'rgba(214,49,43,0.82)' },
+    { name: 'Ochre',       solid: '#86520A', stroke: 'rgba(134,82,10,0.88)' },
+    { name: 'Ink',         solid: '#222B43', stroke: 'rgba(34,43,67,0.7)' },
+    { name: 'White',       solid: '#FAF8F4', stroke: 'rgba(250,248,244,0.6)' }
+  ];
+  var gridColorsEl = document.getElementById('gridColors');
+  GRID_COLORS.forEach(function (c) {
+    var b = document.createElement('button');
+    b.className = 'swatch' + (c.stroke === state.gridColor ? ' on' : '');
+    b.style.background = c.solid;
+    b.title = c.name;
+    b.setAttribute('aria-label', 'Grid colour: ' + c.name);
+    b.addEventListener('click', function () {
+      state.gridColor = c.stroke;
+      [].forEach.call(gridColorsEl.children, function (s) { s.classList.remove('on'); });
+      b.classList.add('on');
+      render();
+    });
+    gridColorsEl.appendChild(b);
+  });
+
+  // ---------- Wiring: zoom ----------
+  var zoomEl = document.getElementById('zoom');
+  zoomEl.addEventListener('input', function () {
+    state.zoom = parseInt(this.value, 10) / 100;
+    document.getElementById('zoomVal').textContent = state.zoom.toFixed(1) + '\u00d7';
+    clampCentre(); layout(); render();
+  });
+  stage.addEventListener('wheel', function (e) {
+    if (!img) return;
+    e.preventDefault();
+    var z = state.zoom + (e.deltaY < 0 ? 0.08 : -0.08);
+    z = Math.min(3.2, Math.max(0.3, z));
+    state.zoom = z;
+    zoomEl.value = Math.round(z * 100);
+    document.getElementById('zoomVal').textContent = z.toFixed(1) + '\u00d7';
+    clampCentre(); layout(); render();
+  }, { passive: false });
+
+  function updateCropLabel() {
+    var ar = activeRatio();
+    var free = !ar;
+    document.getElementById('cropVal').textContent = ar ? (ar.w + ' : ' + ar.h) : 'Free';
+    document.getElementById('zoomRow').classList.toggle('disabled', free);
+    stageHint.textContent = 'Drag corners to resize \u00b7 drag inside to reposition';
+  }
+
+  // ---------- Drag to pan / resize crop ----------
+  var dragging = false, lastX = 0, lastY = 0, dragCorner = -1;
+  function localPt(e) {
+    var rect = stage.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+  stage.addEventListener('pointerdown', function (e) {
+    if (!img || (appEl && appEl.classList.contains('panel-hidden'))) return;
+    var p = localPt(e);
+    dragCorner = hitCorner(p.x, p.y);
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    canvas.classList.add('dragging');
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener('pointermove', function (e) {
+    if (!img) return;
+    if (appEl && appEl.classList.contains('panel-hidden')) return;
+    if (!dragging) {
+      // hover cursor feedback in free mode
+      var hc = hitCorner(localPt(e).x, localPt(e).y);
+      canvas.style.cursor = hc === 0 || hc === 3 ? 'nwse-resize'
+        : hc === 1 || hc === 2 ? 'nesw-resize' : 'grab';
+      return;
+    }
+    var iw = img.naturalWidth, ih = img.naturalHeight;
+    if (dragCorner >= 0) {
+      // resize crop: move the grabbed corner to the pointer (in source px)
+      var p = localPt(e);
+      var sxp = (p.x - view.offX) / view.fit;
+      var syp = (p.y - view.offY) / view.fit;
+      if (activeRatio()) resizeFixed(dragCorner, sxp, syp);
+      else resizeFree(dragCorner, sxp, syp);
+      render();
+      return;
+    }
+    var dx = (e.clientX - lastX) / view.fit;
+    var dy = (e.clientY - lastY) / view.fit;
+    lastX = e.clientX; lastY = e.clientY;
+    // grab-and-drag the grid: it follows the cursor
+    if (!activeRatio()) {
+      state.free.x += dx / iw;
+      state.free.y += dy / ih;
+    } else {
+      state.cx += dx / iw;
+      state.cy += dy / ih;
+    }
+    clampCentre(); render();
+  });
+  function endDrag(e) { dragging = false; dragCorner = -1; canvas.classList.remove('dragging'); layout(); render(); }
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+
+  // ---------- Reset ----------
+  document.getElementById('resetBtn').addEventListener('click', function () {
+    state.contrast = 0; state.brightness = 0; state.zoom = 1; state.cx = 0.5; state.cy = 0.5;
+    contrastEl.value = 0; brightEl.value = 0; zoomEl.value = 100;
+    document.getElementById('contrastVal').textContent = '0';
+    document.getElementById('brightVal').textContent = '0';
+    document.getElementById('zoomVal').textContent = '1.0\u00d7';
+    render();
+  });
+
+  // ---------- Export ----------
+  document.getElementById('downloadBtn').addEventListener('click', function () {
+    if (!img) return;
+    var cr = cropRect();
+    var maxDim = 2400;
+    var scale = Math.min(1, maxDim / Math.max(cr.w, cr.h));
+    var outW = Math.max(1, Math.round(cr.w * scale));
+    var outH = Math.max(1, Math.round(cr.h * scale));
+    var oc = document.createElement('canvas');
+    oc.width = outW; oc.height = outH;
+    var octx = oc.getContext('2d');
+    octx.fillStyle = '#fff';
+    octx.fillRect(0, 0, outW, outH);
+    octx.drawImage(img, -cr.x * scale, -cr.y * scale, img.naturalWidth * scale, img.naturalHeight * scale);
+    try {
+      var id = octx.getImageData(0, 0, outW, outH);
+      filterImageData(id);
+      octx.putImageData(id, 0, 0);
+    } catch (e) {}
+    var ar = activeRatio();
+    var tag = state.mode === 'bw' ? 'value' : 'color';
+    var stepTag = state.steps > 1 ? state.steps + 'val' : 'cont';
+    var ratioTag = ar ? (ar.w + 'x' + ar.h) : 'free';
+    var a = document.createElement('a');
+    a.download = imgName + '_' + tag + '_' + stepTag + '_' + ratioTag + '.png';
+    a.href = oc.toDataURL('image/png');
+    a.click();
+  });
+
+  // ---------- Panel collapse ----------
+  var appEl = document.querySelector('.app');
+  var panelEl = document.querySelector('.panel');
+  var panelToggle = document.getElementById('panelToggle');
+  function positionTab() {
+    var hidden = appEl.classList.contains('panel-hidden');
+    var mobile = window.matchMedia('(max-width: 880px)').matches;
+    var tw = panelToggle.offsetWidth, th = panelToggle.offsetHeight;
+    var left, top, pr;
+    if (mobile) {
+      if (hidden) { left = (window.innerWidth - tw) / 2; top = window.innerHeight - th; }
+      else { pr = panelEl.getBoundingClientRect(); left = pr.left + pr.width / 2 - tw / 2; top = pr.top - th; }
+    } else {
+      if (hidden) { left = window.innerWidth - tw; top = (window.innerHeight - th) / 2; }
+      else { pr = panelEl.getBoundingClientRect(); left = pr.left - tw; top = pr.top + pr.height / 2 - th / 2; }
+    }
+    panelToggle.style.left = Math.round(left) + 'px';
+    panelToggle.style.top = Math.round(top) + 'px';
+    panelToggle.style.right = 'auto';
+    panelToggle.style.bottom = 'auto';
+    panelToggle.style.transform = 'none';
+  }
+  panelToggle.addEventListener('click', function () {
+    var hidden = appEl.classList.toggle('panel-hidden');
+    panelToggle.setAttribute('aria-label', hidden ? 'Show panel' : 'Hide panel');
+    panelToggle.setAttribute('title', hidden ? 'Show panel' : 'Hide panel');
+    requestAnimationFrame(function () { layout(); render(); positionTab(); });
+  });
+
+  // ---------- Menu ----------
+  var navmenu = document.getElementById('navmenu');
+  document.getElementById('menuBtn').addEventListener('click', function () { navmenu.classList.add('open'); });
+  document.getElementById('navClose').addEventListener('click', function () { navmenu.classList.remove('open'); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') navmenu.classList.remove('open'); });
+
+  // ---------- Resize ----------
+  var rT;
+  window.addEventListener('resize', function () { clearTimeout(rT); rT = setTimeout(function () { layout(); render(); positionTab(); }, 80); });
+
+  // ---------- Init ----------
+  updateCropLabel();
+  renderScale();
+  positionTab();
+  window.addEventListener('load', positionTab);
+  loadImage('assets/value_study_sample.jpg', 'carved-mask');
+})();
+</script>
+
+</body>
+</html>

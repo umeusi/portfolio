@@ -432,6 +432,7 @@ const NAV_ITEMS = [
   { label: "Sketches", href: "sketches.html" },
   { label: "About",    href: "about.html" },
   { label: "Painter's Tool", current: true },
+  { label: "Notan",    href: "notan.html" },
 ];
 function NavMenu({ open, onClose }){
   useEffect(()=>{
