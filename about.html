@@ -28,7 +28,7 @@
     inset: clamp(70px, 8.5vh, 96px) 0 0 0;
     overflow: hidden;
     background:
-      url("assets/about_canvas_fig.jpg") left top / cover no-repeat,
+      url("assets/about_canvas_fig.png") left top / cover no-repeat,
       #1c1810;
     isolation: isolate;
   }
@@ -277,11 +277,12 @@
     font-weight: 500;
     font-size: clamp(34px, 4.6vw, 64px);
     line-height: 1.04;
-    color: var(--parris-white);
+    color: var(--parris-taupe);
     text-decoration: none;
     transition: color var(--dur) var(--ease);
   }
-  .menu-link:hover, .menu-link[aria-current="page"] { color: var(--accent); }
+  .menu-link:hover { color: var(--parris-gray); }
+  .menu-link[aria-current="page"] { color: var(--parris-blue); }
 
   /* contact block beneath the menu links */
   .menu-contact {
@@ -300,11 +301,11 @@
     font-family: var(--font-serif);
     font-style: italic;
     font-size: clamp(19px, 1.7vw, 26px);
-    color: var(--parris-white);
+    color: var(--parris-taupe);
     text-decoration: none;
     transition: color var(--dur) var(--ease);
   }
-  .menu-email:hover { color: var(--accent); }
+  .menu-email:hover { color: var(--parris-gray); }
 </style>
 </head>
 <body>
@@ -340,6 +341,7 @@
         <li><a class="menu-link" href="sketches.html">Sketches</a></li>
         <li><a class="menu-link" href="about.html" aria-current="page">About</a></li>
         <li><a class="menu-link" href="painters-tool.html">Painter&rsquo;s Tool</a></li>
+        <li><a class="menu-link" href="notan.html">Notan</a></li>
       </ul>
       <div class="menu-contact">
         <span class="menu-divider"></span>

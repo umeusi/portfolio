@@ -5,6 +5,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
 <title>Painter's Tool — Form, Light &amp; Color</title>
+<link rel="preconnect" href="https://unpkg.com" crossorigin />
 <link rel="stylesheet" href="colors_and_type.css" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -110,21 +111,21 @@
   .navmenu-link {
     font-family: var(--font-serif); font-weight: 500;
     font-size: clamp(34px, 4.5vw, 50px); line-height: 1.65;
-    color: var(--parris-white); text-decoration: none;
+    color: var(--parris-taupe); text-decoration: none;
     transition: color 0.2s var(--ease);
   }
-  .navmenu-link:hover { color: var(--primary); }
-  .navmenu-link.is-current { color: var(--primary); }
+  .navmenu-link:hover { color: var(--parris-gray); }
+  .navmenu-link.is-current { color: var(--parris-blue); }
   .navmenu-rule {
     width: 96px; height: 1px; background: rgba(250,248,244,0.42);
     margin: 30px 0 24px;
   }
   .navmenu-mail {
     font-family: var(--font-serif); font-style: italic;
-    font-size: 18px; color: rgba(250,248,244,0.9);
+    font-size: 18px; color: var(--parris-taupe);
     text-decoration: none; transition: color var(--dur) var(--ease);
   }
-  .navmenu-mail:hover { color: var(--primary); }
+  .navmenu-mail:hover { color: var(--parris-gray); }
 
   .ctl {
     display: inline-flex;
@@ -748,16 +749,15 @@
 </template>
 <div id="root"></div>
 
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
 
 <script src="data/gamblin.js"></script>
 <script src="data/winsornewton.js"></script>
 <script src="data/michaelharding.js"></script>
 <script src="data/oldholland.js"></script>
-<script type="text/babel" src="munsell.jsx"></script>
-<script type="text/babel" src="masters.jsx"></script>
-<script type="text/babel" src="painter-app.jsx"></script>
+<script src="munsell.compiled.js"></script>
+<script src="masters.compiled.js"></script>
+<script src="painter-app.compiled.js"></script>
 </body>
 </html>

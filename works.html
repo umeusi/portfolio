@@ -139,12 +139,13 @@
     font-size: clamp(34px, 4.6vw, 64px);
     line-height: 1.04;
     letter-spacing: -0.005em;
-    color: var(--parris-white);
+    color: var(--parris-taupe);
     text-decoration: none;
     display: inline-block;
     transition: color var(--dur) var(--ease);
   }
-  .menu-link:hover { color: var(--accent); }
+  .menu-link:hover { color: var(--parris-gray); }
+  .menu-link[aria-current="page"] { color: var(--parris-blue); }
 
   /* contact block beneath the menu links */
   .menu-contact {
@@ -163,11 +164,11 @@
     font-family: var(--font-serif);
     font-style: italic;
     font-size: clamp(19px, 1.7vw, 26px);
-    color: var(--parris-white);
+    color: var(--parris-taupe);
     text-decoration: none;
     transition: color var(--dur) var(--ease);
   }
-  .menu-email:hover { color: var(--accent); }
+  .menu-email:hover { color: var(--parris-gray); }
 
   .bar-emblem {
     justify-self: start;
@@ -637,10 +638,11 @@
       </button>
       <div class="menu-inner" style="text-align: left">
         <ul class="menu-list">
-          <li><a class="menu-link" href="works.html">Works</a></li>
+          <li><a class="menu-link" href="works.html" aria-current="page">Works</a></li>
           <li><a class="menu-link" href="sketches.html">Sketches</a></li>
           <li><a class="menu-link" href="about.html">About</a></li>
           <li><a class="menu-link" href="painters-tool.html">Painter&rsquo;s Tool</a></li>
+          <li><a class="menu-link" href="notan.html">Notan</a></li>
         </ul>
         <div class="menu-contact">
           <span class="menu-divider"></span>
