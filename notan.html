@@ -495,13 +495,21 @@
       <a class="navmenu-link is-current" href="notan.html">Notan</a>
     </div>
     <div class="navmenu-rule"></div>
-    <a class="navmenu-mail" href="/cdn-cgi/l/email-protection#8ee7e0e8e1cef7fbe3e7feeffcfce7fda0ede1e3"><span class="__cf_email__" data-cfemail="375e595158774e425a5e475645455e441954585a">[email&#160;protected]</span></a>
+    <a class="navmenu-mail" data-user="info" data-domain="yumiparris.com"></a>
   </div>
 </nav>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 (function () {
   "use strict";
+
+  // Assemble email at runtime so it isn't scrambled by host email-obfuscation.
+  var mailEl = document.querySelector('.navmenu-mail');
+  if (mailEl) {
+    var addr = mailEl.getAttribute('data-user') + '@' + mailEl.getAttribute('data-domain');
+    mailEl.textContent = addr;
+    mailEl.setAttribute('href', 'mailto:' + addr);
+  }
 
   // ---------- Elements ----------
   var stage = document.getElementById('stage');
