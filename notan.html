@@ -495,13 +495,21 @@
       <a class="navmenu-link is-current" href="notan.html">Notan</a>
     </div>
     <div class="navmenu-rule"></div>
-    <a class="navmenu-mail" href="mailto:info@yumiparris.com">info@yumiparris.com</a>
+    <a class="navmenu-mail" data-user="info" data-domain="yumiparris.com"></a>
   </div>
 </nav>
 
 <script>
 (function () {
   "use strict";
+
+  // Assemble email at runtime so it isn't scrambled by host email-obfuscation.
+  var mailEl = document.querySelector('.navmenu-mail');
+  if (mailEl) {
+    var addr = mailEl.getAttribute('data-user') + '@' + mailEl.getAttribute('data-domain');
+    mailEl.textContent = addr;
+    mailEl.setAttribute('href', 'mailto:' + addr);
+  }
 
   // ---------- Elements ----------
   var stage = document.getElementById('stage');
@@ -792,6 +800,28 @@
       ctx.beginPath(); ctx.rect(dx, dy, dw, dh); ctx.clip();
       ctx.drawImage(off, dx - csx * sc, dy - csy * sc, view.dispW * sc, view.dispH * sc);
       ctx.restore();
+      // grid overlay stays on when the panel is closed (unless turned off)
+      if (state.grid !== 0) {
+        ctx.save();
+        ctx.beginPath(); ctx.rect(dx, dy, dw, dh); ctx.clip();
+        ctx.strokeStyle = state.gridColor;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        if (state.grid === 'thirds') {
+          for (var ck = 1; ck <= 2; ck++) {
+            ctx.moveTo(dx + dw * ck / 3, dy); ctx.lineTo(dx + dw * ck / 3, dy + dh);
+            ctx.moveTo(dx, dy + dh * ck / 3); ctx.lineTo(dx + dw, dy + dh * ck / 3);
+          }
+        } else {
+          var cn = state.grid;
+          for (var cgi = 1; cgi < cn; cgi++) {
+            ctx.moveTo(dx + dw * cgi / cn, dy); ctx.lineTo(dx + dw * cgi / cn, dy + dh);
+            ctx.moveTo(dx, dy + dh * cgi / cn); ctx.lineTo(dx + dw, dy + dh * cgi / cn);
+          }
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
       return;
     }
 
