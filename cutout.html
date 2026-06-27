@@ -594,7 +594,17 @@ import { AutoModel, AutoProcessor, RawImage, env }
   from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js';
 
 env.allowLocalModels = false;
-env.useBrowserCache  = typeof caches !== 'undefined';
+// Test the Cache API actually works (requires HTTPS + no private-mode block)
+async function setCacheSupport() {
+  try {
+    await caches.open('__test__');
+    await caches.delete('__test__');
+    env.useBrowserCache = true;
+  } catch (e) {
+    env.useBrowserCache = false;
+  }
+}
+setCacheSupport();
 
 // ---- DOM refs ----
 var stage       = document.getElementById('stage');
@@ -754,10 +764,25 @@ async function ensureModel() {
     procNote.textContent  = 'First run downloads ~45 MB and caches it in your browser.';
   }
 
-  model = await AutoModel.from_pretrained('briaai/RMBG-1.4', {
-    config: { model_type: 'custom' },
-    progress_callback: onProgress,
-  });
+  // If cache fails mid-load, retry without it
+  async function loadModel() {
+    try {
+      return await AutoModel.from_pretrained('briaai/RMBG-1.4', {
+        config: { model_type: 'custom' },
+        progress_callback: onProgress,
+      });
+    } catch (e) {
+      if (env.useBrowserCache) {
+        env.useBrowserCache = false;
+        return await AutoModel.from_pretrained('briaai/RMBG-1.4', {
+          config: { model_type: 'custom' },
+          progress_callback: onProgress,
+        });
+      }
+      throw e;
+    }
+  }
+  model = await loadModel();
 
   processor = await AutoProcessor.from_pretrained('briaai/RMBG-1.4', {
     config: {
