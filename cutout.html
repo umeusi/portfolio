@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Cutout" subtitle="Upload a photo, remove the background with AI, and download a transparent PNG" viewport="1440x900" -->
+<html lang="en" class="theme-light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Y.Parris — Cutout</title>
+<link rel="stylesheet" href="colors_and_type.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: rgb(226,226,226);
+    color: var(--fg1);
+    font-family: var(--font-serif);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app { position: relative; height: 100%; display: flex; flex-direction: column; }
+
+  /* ---------- Header ---------- */
+  .topbar {
+    position: relative; z-index: 30;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    padding: calc(clamp(20px, 2.4vw, 30px) + 3px) calc(clamp(22px, 3vw, 44px) - 4px) 0;
+    gap: var(--s-6); pointer-events: none;
+  }
+  .topbar > * { pointer-events: auto; }
+  .panel-cap {
+    position: absolute; top: 0; right: 0; width: 372px; height: 100%;
+    background: var(--bg); border-left: 1px solid var(--line);
+    z-index: -1; pointer-events: none;
+  }
+  .brandblock { display: flex; flex-direction: row; align-items: center; gap: 13px; }
+  .brand-emblem { display: inline-flex; }
+  .brand-emblem img { height: 26px; width: auto; display: block; }
+  .brand-div { font-family: var(--font-serif); font-size: 21px; font-weight: 300; color: var(--fg3); line-height: 1; }
+  .studyline {
+    font-family: var(--font-serif); font-weight: 500; font-size: 20px;
+    letter-spacing: 0.30em; text-transform: uppercase; color: var(--fg1); line-height: 1;
+  }
+
+  /* hamburger */
+  .menu-btn {
+    flex: none; width: 30px; height: 30px; display: grid; place-items: center;
+    border: none; background: none; color: var(--parris-navy); cursor: pointer;
+    transition: color var(--dur) var(--ease);
+  }
+  .menu-btn:hover { color: var(--primary); }
+  .menu-ico { width: 20px; height: 14px; position: relative; display: block; }
+  .menu-ico span {
+    position: absolute; left: 0; right: 0; height: 2px; border-radius: 2px;
+    background: currentColor; transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  }
+  .menu-ico span:nth-child(1) { top: 0; }
+  .menu-ico span:nth-child(2) { top: 50%; transform: translateY(-50%); }
+  .menu-ico span:nth-child(3) { bottom: 0; }
+
+  /* ---------- Nav overlay ---------- */
+  .navmenu { position: fixed; inset: 0; z-index: 120; pointer-events: none; }
+  .navmenu-panel {
+    position: absolute; inset: 0; background: var(--parris-navy); color: var(--parris-white);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity var(--dur) var(--ease), visibility var(--dur) var(--ease);
+  }
+  .navmenu.open { pointer-events: auto; }
+  .navmenu.open .navmenu-panel { opacity: 1; visibility: visible; }
+  .navmenu-close {
+    position: absolute; top: calc(clamp(20px, 2.4vw, 30px) + 7px); right: calc(clamp(22px, 3vw, 44px) - 4px);
+    width: 30px; height: 30px; display: grid; place-items: center; cursor: pointer;
+    background: none; border: none; color: rgba(250,248,244,0.82); transition: color var(--dur) var(--ease);
+  }
+  .navmenu-close:hover { color: var(--parris-white); }
+  .navmenu-close svg { width: 22px; height: 22px; }
+  .navmenu-nav { display: flex; flex-direction: column; align-items: center; }
+  .navmenu-link {
+    font-family: var(--font-serif); font-weight: 500; font-size: clamp(34px, 4.5vw, 50px);
+    line-height: 1.65; color: var(--parris-taupe); text-decoration: none; transition: color 0.2s var(--ease);
+  }
+  .navmenu-link:hover { color: var(--parris-gray); }
+  .navmenu-link.is-current { color: var(--parris-blue); }
+  .navmenu-rule { width: 96px; height: 1px; background: rgba(250,248,244,0.42); margin: 30px 0 24px; }
+  .navmenu-mail {
+    font-family: var(--font-serif); font-style: italic; font-size: 18px;
+    color: var(--parris-taupe); text-decoration: none; transition: color var(--dur) var(--ease);
+  }
+  .navmenu-mail:hover { color: var(--parris-gray); }
+
+  /* ---------- Work area ---------- */
+  .work { flex: 1 1 auto; min-height: 0; display: flex; }
+  .stage {
+    flex: 1 1 auto; min-width: 0; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .stage-black { background: #000 !important; }
+
+  /* checkerboard transparency indicator */
+  .checker-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(45deg, #ababab 25%, transparent 25%),
+      linear-gradient(-45deg, #ababab 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #ababab 75%),
+      linear-gradient(-45deg, transparent 75%, #ababab 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    background-color: #bebebe;
+    opacity: 0; transition: opacity 0.5s var(--ease);
+  }
+  .checker-bg.on { opacity: 1; }
+
+  /* displayed image */
+  .stage-img {
+    position: relative; z-index: 2;
+    max-width: calc(100% - 80px); max-height: calc(100% - 80px);
+    display: block;
+    opacity: 0; transition: opacity 0.4s var(--ease);
+    filter: drop-shadow(0 10px 36px rgba(0,0,0,0.22)) drop-shadow(0 2px 6px rgba(0,0,0,0.10));
+  }
+  .stage-img.on  { opacity: 1; }
+  .stage-img.gone { display: none; }
+
+  /* drop zone */
+  .dropzone {
+    position: absolute; inset: clamp(24px, 5vw, 80px); z-index: 3;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: var(--s-5); text-align: center;
+    border: 1.5px dashed var(--line-strong); border-radius: var(--r);
+    color: var(--fg2); background: rgba(255,255,255,0.35); cursor: pointer;
+    transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+  }
+  .dropzone:hover  { border-color: var(--primary); }
+  .dropzone.drag-on { border-color: var(--accent); background: rgba(12,56,234,0.06); }
+  .dropzone.gone   { display: none; }
+  .dz-ico  { width: 46px; height: 46px; color: var(--fg3); }
+  .dz-title { font-family: var(--font-serif); font-size: 24px; color: var(--fg1); }
+  .dz-sub  { font-family: var(--font-sans); font-size: 12.5px; letter-spacing: 0.04em; color: var(--fg3); }
+
+  /* processing overlay */
+  .proc {
+    position: absolute; inset: 0; z-index: 10;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-4);
+    background: rgba(218,218,218,0.90); backdrop-filter: blur(6px);
+    opacity: 0; visibility: hidden; transition: opacity 0.28s, visibility 0.28s;
+  }
+  .proc.on { opacity: 1; visibility: visible; }
+  .proc-label {
+    font-family: var(--font-sans); font-size: 11.5px; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg1);
+  }
+  .proc-track { width: 220px; height: 3px; background: var(--line-strong); border-radius: var(--r-pill); overflow: hidden; }
+  .proc-fill { height: 100%; width: 0%; background: var(--primary); border-radius: var(--r-pill); transition: width 0.28s ease; }
+  .proc-note {
+    font-family: var(--font-sans); font-size: 10px; letter-spacing: 0.06em;
+    color: var(--fg3); max-width: 280px; text-align: center; line-height: 1.55;
+  }
+
+  /* ---------- Panel ---------- */
+  .panel {
+    flex: 0 0 372px; width: 372px; border-left: 1px solid var(--line);
+    background: var(--bg); overflow-y: auto; display: flex; flex-direction: column;
+  }
+  .sect { padding: var(--s-6) var(--s-8); border-bottom: 1px solid var(--line); }
+  .sect:last-child { border-bottom: none; }
+  .sect-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--s-4); }
+  .sect-title {
+    font-family: var(--font-sans); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg3);
+  }
+
+  /* upload btn */
+  .upload-btn {
+    display: flex; align-items: center; justify-content: center; gap: var(--s-3);
+    width: 100%; height: 44px; border: 1px solid var(--line-strong); background: var(--surface);
+    color: var(--fg1); border-radius: var(--r); cursor: pointer;
+    font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .upload-btn:hover { border-color: var(--ink); color: var(--primary); }
+  .upload-btn svg { width: 17px; height: 17px; }
+
+  .filename {
+    margin-top: 10px; font-family: var(--font-sans); font-size: 11px;
+    color: var(--fg3); letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .privacy-note {
+    display: flex; gap: 9px; margin-top: 14px; padding: 11px 12px;
+    border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg-2);
+  }
+  .privacy-note svg { width: 15px; height: 15px; flex: none; margin-top: 1px; color: var(--fg2); }
+  .privacy-note p {
+    font-family: var(--font-sans); font-size: 10.5px; line-height: 1.5;
+    letter-spacing: 0.01em; color: var(--fg3);
+  }
+
+  /* primary action */
+  .action-btn {
+    display: flex; align-items: center; justify-content: center; gap: var(--s-3);
+    width: 100%; height: 44px; border: none; background: var(--primary); color: var(--primary-fg);
+    border-radius: var(--r); cursor: pointer;
+    font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    transition: background var(--dur) var(--ease), opacity var(--dur) var(--ease);
+  }
+  .action-btn:hover:not(:disabled) { background: var(--parris-brown-700); }
+  .action-btn:disabled { opacity: 0.40; cursor: not-allowed; }
+  .action-btn svg { width: 16px; height: 16px; }
+
+  .status-line {
+    margin-top: 10px; min-height: 15px;
+    font-family: var(--font-sans); font-size: 11px; color: var(--fg3);
+    letter-spacing: 0.03em; text-align: center;
+  }
+  .status-line.ok  { color: oklch(0.52 0.12 155); }
+  .status-line.err { color: oklch(0.52 0.14 27); }
+
+  /* view toggle */
+  .seg { display: flex; padding: 3px; border: 1px solid var(--line); background: var(--bg-2); border-radius: var(--r); }
+  .segbtn {
+    flex: 1; height: 34px; border: none; background: transparent; border-radius: 3px; cursor: pointer;
+    font-family: var(--font-sans); font-size: 11.5px; font-weight: 500;
+    letter-spacing: 0.08em; color: var(--fg2); text-transform: uppercase;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .segbtn.on { background: var(--surface); color: var(--fg1); box-shadow: var(--shadow-1); }
+
+  /* download btn */
+  .download-btn {
+    display: flex; align-items: center; justify-content: center; gap: var(--s-3);
+    width: 100%; height: 44px; border: 1px solid var(--line-strong); background: var(--surface);
+    color: var(--fg1); border-radius: var(--r); cursor: pointer;
+    font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .download-btn:hover:not(:disabled) { border-color: var(--ink); color: var(--primary); }
+  .download-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .download-btn svg { width: 16px; height: 16px; }
+
+  .dim-info {
+    margin-top: 10px; font-family: var(--font-sans); font-size: 11px;
+    color: var(--fg3); letter-spacing: 0.03em; text-align: center;
+  }
+
+  /* ---------- Magic Wand ---------- */
+  .stage-img.wand-on { cursor: crosshair; }
+
+  .wand-btn {
+    display: flex; align-items: center; justify-content: center; gap: var(--s-3);
+    width: 100%; height: 44px; border: 1px solid var(--line-strong); background: var(--surface);
+    color: var(--fg1); border-radius: var(--r); cursor: pointer;
+    font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .wand-btn:hover:not(:disabled) { border-color: var(--ink); color: var(--primary); }
+  .wand-btn.active { background: var(--ink); color: var(--parris-white); border-color: var(--ink); }
+  .wand-btn svg { width: 16px; height: 16px; }
+
+  .refine-hint {
+    margin-top: 10px; font-family: var(--font-sans); font-size: 10.5px;
+    line-height: 1.5; letter-spacing: 0.02em; color: var(--fg3);
+  }
+
+  .slider-group { margin-top: var(--s-5); }
+  .slider-head {
+    display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;
+  }
+  .slider-lbl {
+    font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg2);
+  }
+  .slider-val {
+    font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.04em; color: var(--fg1);
+  }
+  .tol-range {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
+    background: var(--line-strong); border-radius: var(--r-pill); outline: none; cursor: pointer;
+  }
+  .tol-range::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--fg1); cursor: pointer; border: 2.5px solid var(--bg); box-shadow: var(--shadow-1);
+    transition: background var(--dur) var(--ease);
+  }
+  .tol-range::-webkit-slider-thumb:hover { background: var(--primary); }
+  .tol-range::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%; background: var(--fg1);
+    cursor: pointer; border: 2.5px solid var(--bg); box-shadow: var(--shadow-1);
+  }
+
+  .undo-btn {
+    display: flex; align-items: center; justify-content: center; gap: var(--s-2);
+    width: 100%; height: 36px; margin-top: var(--s-4);
+    border: 1px solid var(--line); background: transparent; color: var(--fg2);
+    border-radius: var(--r); cursor: pointer;
+    font-family: var(--font-sans); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.10em; text-transform: uppercase;
+    transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .undo-btn:hover:not(:disabled) { border-color: var(--line-strong); color: var(--fg1); }
+  .undo-btn:disabled { opacity: 0.28; cursor: not-allowed; }
+  .undo-btn svg { width: 14px; height: 14px; }
+
+  /* ---------- Brush ---------- */
+  .brush-cursor {
+    position: absolute; pointer-events: none; z-index: 10;
+    border: 1.5px solid rgba(255,255,255,0.9); border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.55); display: none;
+    transform: translate3d(0,0,0);
+  }
+  .stage.brush-on { cursor: none; }
+  .refine-divider {
+    margin: var(--s-5) 0; height: 1px; background: var(--line);
+  }
+  .stage.sel-on { cursor: crosshair; }
+  .sel-act-row { display: flex; gap: var(--s-3); margin-top: var(--s-4); }
+  .sel-act-btn {
+    flex: 1; padding: 7px 10px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--bg2);
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    transition: background .15s, border-color .15s; color: var(--fg);
+  }
+  .sel-act-btn:hover { background: var(--bg3); }
+  .sel-act-btn.sel-erase { color: #cc2200; border-color: #cc2200; }
+  .sel-act-btn.sel-erase:hover { background: rgba(204,34,0,.08); }
+  .sel-act-btn.sel-restore { color: #1a7a3a; border-color: #1a7a3a; }
+  .sel-act-btn.sel-restore:hover { background: rgba(26,122,58,.08); }
+
+  /* ---------- Panel toggle tab ---------- */
+  .panel-toggle {
+    position: fixed; z-index: 115;
+    top: 50%; right: 372px; transform: translateY(-50%);
+    width: 22px; height: 54px; display: grid; place-items: center;
+    background: var(--surface); color: var(--fg2);
+    border: 1px solid var(--line); border-right: none;
+    border-radius: var(--r) 0 0 var(--r);
+    box-shadow: -3px 0 8px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+  }
+  .panel-toggle:hover { color: var(--primary); background: var(--bg-2); }
+  .panel-toggle svg { width: 15px; height: 15px; }
+  .panel-toggle .ico-expand { display: none; }
+  .app.panel-hidden .panel-toggle .ico-collapse { display: none; }
+  .app.panel-hidden .panel-toggle .ico-expand { display: block; }
+  .app.panel-hidden .panel { display: none; }
+  .app.panel-hidden .panel-cap { display: none; }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 880px) {
+    body { overflow: hidden; }
+    .app { height: 100%; }
+    .work { flex-direction: column; }
+    .stage { height: 52vh; min-height: 280px; flex: none; }
+    .panel {
+      flex: 1 1 auto; width: 100%; min-height: 0;
+      border-left: none; border-top: 1px solid var(--line); overflow-y: auto;
+    }
+    .panel-cap { display: none; }
+    .panel-toggle {
+      top: 52vh; right: 50%; transform: translate(50%, -100%);
+      width: 54px; height: 22px;
+      border: 1px solid var(--line); border-bottom: none;
+      border-radius: var(--r) var(--r) 0 0;
+      box-shadow: 0 -3px 8px rgba(0,0,0,0.05);
+    }
+    .panel-toggle svg { transform: rotate(90deg); }
+    .app.panel-hidden .stage { height: 100%; }
+    .app.panel-hidden .panel-toggle {
+      top: auto; bottom: 0; right: 50%; transform: translate(50%, 0);
+    }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header class="topbar">
+    <div class="panel-cap"></div>
+    <div class="brandblock">
+      <a class="brand-emblem" href="index.html" aria-label="Y.Parris — home"><img src="assets/emblem_brown.png" alt="Y.Parris" /></a>
+      <span class="brand-div" aria-hidden="true">|</span>
+      <span class="studyline">Cutout</span>
+    </div>
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu">
+      <span class="menu-ico"><span></span><span></span><span></span></span>
+    </button>
+  </header>
+
+  <!-- Work area -->
+  <div class="work">
+
+    <div class="stage" id="stage">
+      <div class="checker-bg" id="checkerBg"></div>
+      <img class="stage-img gone" id="stageImg" alt="Photo" />
+      <div class="brush-cursor" id="brushCursor"></div>
+      <canvas id="brushCanvas" style="position:absolute;display:none;z-index:3;pointer-events:none"></canvas>
+      <canvas id="selCanvas" style="position:absolute;display:none;z-index:6;top:0;left:0"></canvas>
+
+      <!-- Drop zone -->
+      <div class="dropzone" id="dropzone">
+        <svg class="dz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.6"/>
+          <path d="m21 15-5-5L5 21"/>
+        </svg>
+        <div>
+          <div class="dz-title">Drop a photo</div>
+          <div class="dz-sub">or click to browse &middot; JPG, PNG, WEBP</div>
+        </div>
+      </div>
+
+      <!-- Processing overlay -->
+      <div class="proc" id="proc">
+        <div class="proc-label" id="procLabel">Loading model</div>
+        <div class="proc-track"><div class="proc-fill" id="procFill"></div></div>
+        <div class="proc-note" id="procNote">First run downloads the AI model (~45 MB) and caches it in your browser.</div>
+      </div>
+    </div>
+
+    <!-- Control panel -->
+    <aside class="panel">
+
+      <section class="sect">
+        <div class="sect-head"><span class="sect-title">Source</span></div>
+        <button class="upload-btn" id="uploadBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <path d="M17 8l-5-5-5 5"/>
+            <path d="M12 3v12"/>
+          </svg>
+          Upload photo
+        </button>
+        <div class="filename" id="filename">No photo loaded</div>
+        <input type="file" id="fileInput" accept="image/*" hidden />
+        <div class="privacy-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+          </svg>
+          <p>Your photo stays on this device. The AI runs entirely in your browser — nothing is uploaded or sent anywhere.</p>
+        </div>
+      </section>
+
+      <section class="sect">
+        <div class="sect-head"><span class="sect-title">Background</span></div>
+        <button class="action-btn" id="removeBgBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="6" cy="6" r="3"/>
+            <circle cx="6" cy="18" r="3"/>
+            <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+            <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+          </svg>
+          Remove Background
+        </button>
+        <div class="status-line" id="statusLine"></div>
+      </section>
+
+      <section class="sect" id="viewSect" style="display:none">
+        <div class="sect-head"><span class="sect-title">Preview</span></div>
+        <div class="seg" id="viewSeg">
+          <button class="segbtn" data-view="original">Original</button>
+          <button class="segbtn on" data-view="cutout">Cutout</button>
+          <button class="segbtn" data-view="black">Black</button>
+        </div>
+      </section>
+
+      <section class="sect" id="refineSect" style="display:none">
+        <div class="sect-head"><span class="sect-title">Refine</span></div>
+        <button class="wand-btn" id="wandBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/>
+            <path d="M17.8 11.8 19 13"/><path d="M15 9h.01"/><path d="M17.8 6.2 19 5"/>
+            <path d="m3 21 9-9"/><path d="M12.2 6.2 11 5"/>
+          </svg>
+          <span id="wandLabel">Magic Wand</span>
+        </button>
+        <p class="refine-hint">Activate, then click any area on the cutout to flood-erase it.</p>
+        <div class="slider-group">
+          <div class="slider-head">
+            <span class="slider-lbl">Tolerance</span>
+            <span class="slider-val" id="tolVal">30</span>
+          </div>
+          <input class="tol-range" type="range" id="tolSlider" min="1" max="100" value="30" />
+        </div>
+
+        <div class="refine-divider"></div>
+
+        <!-- Brush tool -->
+        <button class="wand-btn" id="brushBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/>
+            <path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1 1 2.48 1.02 3.5 1.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-2.5-2.02z"/>
+          </svg>
+          <span id="brushLabel">Brush</span>
+        </button>
+        <p class="refine-hint" id="brushHint" style="display:none">Hold and drag to paint. Use <strong>+</strong> to restore areas, <strong>−</strong> to erase.</p>
+        <div id="brushControls" style="display:none">
+          <div class="seg" id="brushModeSeg" style="margin-top:var(--s-4)">
+            <button class="segbtn" data-bmode="restore">+ Restore</button>
+            <button class="segbtn on" data-bmode="erase">− Erase</button>
+          </div>
+          <div class="slider-group">
+            <div class="slider-head">
+              <span class="slider-lbl">Size</span>
+              <span class="slider-val" id="brushSizeVal">20</span>
+            </div>
+            <input class="tol-range" type="range" id="brushSizeSlider" min="2" max="120" value="20" />
+          </div>
+        </div>
+
+        <div class="refine-divider"></div>
+
+        <!-- Selection tool -->
+        <button class="wand-btn" id="selBtn">
+          <svg id="selIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 2"/>
+          </svg>
+          <span id="selLabel">Select Area</span>
+        </button>
+        <div class="seg" id="selModeSeg" style="margin-top:var(--s-4);display:none">
+          <button class="segbtn on" data-smode="rect">Rectangle</button>
+          <button class="segbtn" data-smode="lasso">Lasso</button>
+        </div>
+        <p class="refine-hint" id="selHint" style="display:none">Drag to draw a rectangle, then erase or restore the area.</p>
+        <div id="selActions" style="display:none">
+          <div class="sel-act-row">
+            <button class="sel-act-btn sel-erase" id="selEraseBtn">− Erase</button>
+            <button class="sel-act-btn sel-restore" id="selRestoreBtn">+ Restore</button>
+          </div>
+        </div>
+
+        <button class="undo-btn" id="undoBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>
+          </svg>
+          Undo Last
+        </button>
+      </section>
+
+      <section class="sect">
+        <div class="sect-head"><span class="sect-title">Export</span></div>
+        <button class="download-btn" id="downloadBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <path d="M7 10l5 5 5-5"/>
+            <path d="M12 15V3"/>
+          </svg>
+          Download PNG
+        </button>
+        <div class="dim-info" id="dimInfo"></div>
+      </section>
+
+    </aside>
+  </div>
+
+  <button class="panel-toggle" id="panelToggle" aria-label="Hide panel" title="Hide panel">
+    <svg class="ico-collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    <svg class="ico-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+  </button>
+</div>
+
+<!-- Nav overlay -->
+<nav class="navmenu" id="navmenu">
+  <div class="navmenu-panel">
+    <button class="navmenu-close" id="navClose" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="navmenu-nav">
+      <a class="navmenu-link" href="works.html">Works</a>
+      <a class="navmenu-link" href="sketches.html">Sketches</a>
+      <a class="navmenu-link" href="about.html">About</a>
+      <a class="navmenu-link" href="painters-tool.html">Painter&rsquo;s Tool</a>
+      <a class="navmenu-link" href="notan.html">Notan</a>
+
+    </div>
+    <div class="navmenu-rule"></div>
+    <a class="navmenu-mail" data-user="info" data-domain="yumiparris.com"></a>
+  </div>
+</nav>
+
+<script type="module">
+'use strict';
+
+// Use @xenova/transformers v2 — ships as a single self-contained browser bundle,
+// no lodash/ESM dependency issues. RMBG-1.4 runs entirely in-browser via ONNX.
+import { AutoModel, AutoProcessor, RawImage, env }
+  from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/transformers.min.js';
+
+env.allowLocalModels = false;
+
+// Force single-threaded WASM — avoids SharedArrayBuffer issues on iOS Safari
+env.backends.onnx.wasm.numThreads = 1;
+
+// Test the Cache API actually works (requires HTTPS + no private-mode block)
+async function setCacheSupport() {
+  try {
+    await caches.open('__test__');
+    await caches.delete('__test__');
+    env.useBrowserCache = true;
+  } catch (e) {
+    env.useBrowserCache = false;
+  }
+}
+setCacheSupport();
+
+// ---- DOM refs ----
+var stage       = document.getElementById('stage');
+var dropzone    = document.getElementById('dropzone');
+var stageImg    = document.getElementById('stageImg');
+var checkerBg   = document.getElementById('checkerBg');
+var proc        = document.getElementById('proc');
+var procLabel   = document.getElementById('procLabel');
+var procFill    = document.getElementById('procFill');
+var procNote    = document.getElementById('procNote');
+var uploadBtn   = document.getElementById('uploadBtn');
+var fileInput   = document.getElementById('fileInput');
+var fnameEl     = document.getElementById('filename');
+var removeBgBtn = document.getElementById('removeBgBtn');
+var statusLine  = document.getElementById('statusLine');
+var viewSect    = document.getElementById('viewSect');
+var viewSeg     = document.getElementById('viewSeg');
+var downloadBtn = document.getElementById('downloadBtn');
+var dimInfo     = document.getElementById('dimInfo');
+
+// ---- State ----
+var srcUrl       = null;
+var srcName      = 'photo';
+var resultCanvas = null;
+var resultUrl    = null;
+var model        = null;
+var processor    = null;
+// Wand
+var wandActive = false;
+var wandTol    = 30;
+var undoStack  = [];
+// Brush
+var brushActive = false;
+var brushMode   = 'erase';
+var brushSize   = 20;
+var brushDown   = false;
+var brushSnap   = null;
+var brushMoved  = false;
+var brushRefreshTimer = null;
+var srcImageData = null;
+// Selection
+var selActive = false;
+var selMode   = 'rect';
+var selDown   = false;
+var selStart  = null;
+var selEnd    = null;
+var selRect   = null;
+var selPath   = [];
+var selAnimId = null;
+var selOffset = 0;
+
+// ---- File handling ----
+function handleFile(file) {
+  if (!file || !/^image\//.test(file.type)) return;
+  if (srcUrl) URL.revokeObjectURL(srcUrl);
+  srcUrl  = URL.createObjectURL(file);
+  srcName = file.name.replace(/\.[^.]+$/, '');
+  fnameEl.textContent = file.name;
+
+  if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; }
+  resultCanvas = null;
+  viewSect.style.display   = 'none';
+  document.getElementById('refineSect').style.display = 'none';
+  downloadBtn.disabled     = true;
+  // Reset wand
+  wandActive = false; undoStack = [];
+  wandBtn.classList.remove('active');
+  stageImg.classList.remove('wand-on');
+  document.getElementById('wandLabel').textContent = 'Magic Wand';
+  document.getElementById('undoBtn').disabled = true;
+  brushActive = false; brushDown = false; brushSnap = null; srcImageData = null;
+  document.getElementById('brushBtn').classList.remove('active');
+  document.getElementById('brushControls').style.display = 'none';
+  document.getElementById('brushHint').style.display = 'none';
+  document.getElementById('brushLabel').textContent = 'Brush';
+  stage.classList.remove('brush-on');
+  document.getElementById('brushCursor').style.display = 'none';
+  document.getElementById('brushCanvas').style.display = 'none';
+  stageImg.style.opacity = '';
+  deactivateSel();
+  dimInfo.textContent    = '';
+  statusLine.textContent = '';
+  statusLine.className   = 'status-line';
+
+  stageImg.classList.remove('on');
+  stageImg.onload = function () { stageImg.classList.add('on'); };
+  stageImg.src    = srcUrl;
+  stageImg.classList.remove('gone');
+  checkerBg.classList.remove('on');
+  dropzone.classList.add('gone');
+  removeBgBtn.disabled = false;
+
+  [].forEach.call(viewSeg.children, function (b) {
+    b.classList.toggle('on', b.dataset.view === 'original');
+  });
+}
+
+// ---- Switch views ----
+function showOriginal() {
+  if (!srcUrl) return;
+  stageImg.src = srcUrl;
+  stage.classList.remove('stage-black');
+  checkerBg.classList.remove('on');
+  [].forEach.call(viewSeg.children, function (b) {
+    b.classList.toggle('on', b.dataset.view === 'original');
+  });
+}
+
+function currentResultSrc() {
+  if (resultCanvas) {
+    var url = resultCanvas.toDataURL('image/png');
+    resultUrl = url; // keep in sync
+    return url;
+  }
+  return resultUrl;
+}
+
+function showBlack() {
+  if (!currentResultSrc()) return;
+  stage.classList.remove('stage-black'); // remove first so transition is clean
+  checkerBg.classList.remove('on');
+  stageImg.src = currentResultSrc();
+  stage.classList.add('stage-black');
+  [].forEach.call(viewSeg.children, function (b) {
+    b.classList.toggle('on', b.dataset.view === 'black');
+  });
+}
+
+function showCutout() {
+  if (!currentResultSrc()) return;
+  stage.classList.remove('stage-black');
+  stageImg.src = currentResultSrc();
+  checkerBg.classList.add('on');
+  [].forEach.call(viewSeg.children, function (b) {
+    b.classList.toggle('on', b.dataset.view === 'cutout');
+  });
+}
+
+// ---- Lazy model load ----
+async function ensureModel() {
+  if (model && processor) return;
+
+  var fileProgress = {};
+
+  function onProgress(info) {
+    if (info.status === 'progress') {
+      fileProgress[info.file] = info.progress || 0;
+    } else if (info.status === 'done') {
+      fileProgress[info.file] = 100;
+    }
+    var vals = Object.values(fileProgress);
+    if (vals.length) {
+      var avg = vals.reduce(function (a, b) { return a + b; }, 0) / vals.length;
+      procFill.style.width = Math.max(3, Math.min(88, Math.round(avg))) + '%';
+    }
+    procLabel.textContent = 'Downloading model';
+    procNote.textContent  = 'First run downloads ~45 MB and caches it in your browser.';
+  }
+
+  // If cache fails mid-load, retry without it
+  async function loadModel() {
+    try {
+      return await AutoModel.from_pretrained('briaai/RMBG-1.4', {
+        config: { model_type: 'custom' },
+        progress_callback: onProgress,
+      });
+    } catch (e) {
+      if (env.useBrowserCache) {
+        env.useBrowserCache = false;
+        return await AutoModel.from_pretrained('briaai/RMBG-1.4', {
+          config: { model_type: 'custom' },
+          progress_callback: onProgress,
+        });
+      }
+      throw e;
+    }
+  }
+  model = await loadModel();
+
+  processor = await AutoProcessor.from_pretrained('briaai/RMBG-1.4', {
+    config: {
+      do_normalize:            true,
+      do_pad:                  false,
+      do_rescale:              true,
+      do_resize:               true,
+      image_mean:              [0.5, 0.5, 0.5],
+      feature_extractor_type:  'ImageFeatureExtractor',
+      image_std:               [1, 1, 1],
+      resample:                2,
+      rescale_factor:          0.00392156862745098,
+      size:                    { width: 1024, height: 1024 },
+    }
+  });
+}
+
+// ---- Background removal ----
+async function doRemoveBg() {
+  if (!srcUrl) return;
+  removeBgBtn.disabled   = true;
+  statusLine.textContent = '';
+  statusLine.className   = 'status-line';
+  procFill.style.width   = '3%';
+  procLabel.textContent  = 'Loading model';
+  procNote.textContent   = 'First run downloads ~45 MB and caches it in your browser.';
+  proc.classList.add('on');
+
+  try {
+    await ensureModel();
+
+    procLabel.textContent = 'Removing background';
+    procNote.textContent  = 'Segmenting the foreground\u2026';
+    procFill.style.width  = '90%';
+
+    // Load source via canvas so there are no cross-context blob URL issues
+    var imgEl = new Image();
+    imgEl.src = srcUrl;
+    await new Promise(function (res) { imgEl.onload = res; });
+    var origW = imgEl.naturalWidth;
+    var origH = imgEl.naturalHeight;
+
+    var tmpC = document.createElement('canvas');
+    tmpC.width = origW; tmpC.height = origH;
+    tmpC.getContext('2d').drawImage(imgEl, 0, 0);
+    var pxData = tmpC.getContext('2d').getImageData(0, 0, origW, origH);
+    srcImageData = pxData;
+
+    // Build RawImage and run through processor
+    var rawImg = new RawImage(pxData.data, origW, origH, 4);
+    var processed = await processor(rawImg);
+
+    // ONNX inference
+    var result     = await model({ input: processed.pixel_values });
+    // Grab the first (and only) output tensor — key is 'output' for RMBG-1.4
+    var maskTensor = result.output || result[Object.keys(result)[0]];
+    var dims       = maskTensor.dims;                   // [1, 1, 1024, 1024]
+    var mH = dims[dims.length - 2];
+    var mW = dims[dims.length - 1];
+    var maskFloats = maskTensor.data;                   // Float32Array
+
+    // Paint greyscale mask onto a canvas at model output resolution
+    var mC = document.createElement('canvas');
+    mC.width = mW; mC.height = mH;
+    var mID = mC.getContext('2d').createImageData(mW, mH);
+    for (var i = 0; i < maskFloats.length; i++) {
+      var v = Math.round(Math.max(0, Math.min(1, maskFloats[i])) * 255);
+      mID.data[4*i]   = v;
+      mID.data[4*i+1] = v;
+      mID.data[4*i+2] = v;
+      mID.data[4*i+3] = 255;
+    }
+    mC.getContext('2d').putImageData(mID, 0, 0);
+
+    // Resize mask to original image dimensions
+    var rC = document.createElement('canvas');
+    rC.width = origW; rC.height = origH;
+    rC.getContext('2d').drawImage(mC, 0, 0, origW, origH);
+    var rMask = rC.getContext('2d').getImageData(0, 0, origW, origH);
+
+    // Apply mask R channel as alpha over original image
+    var outC = document.createElement('canvas');
+    outC.width = origW; outC.height = origH;
+    var outCtx = outC.getContext('2d');
+    outCtx.drawImage(imgEl, 0, 0);
+    var outD = outCtx.getImageData(0, 0, origW, origH);
+    for (var j = 0; j < origW * origH; j++) {
+      outD.data[4*j + 3] = rMask.data[4*j]; // R → alpha
+    }
+    outCtx.putImageData(outD, 0, 0);
+
+    resultCanvas = outC;
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+
+    outC.toBlob(function (blob) {
+      resultUrl = URL.createObjectURL(blob);
+      procFill.style.width = '100%';
+      setTimeout(function () {
+        proc.classList.remove('on');
+        viewSect.style.display   = '';
+        document.getElementById('refineSect').style.display = '';
+        showCutout();
+        downloadBtn.disabled   = false;
+        dimInfo.textContent    = origW + ' \u00d7 ' + origH + ' px';
+        statusLine.textContent = 'Background removed';
+        statusLine.className   = 'status-line ok';
+        removeBgBtn.disabled   = false;
+      }, 300);
+    }, 'image/png');
+
+  } catch (err) {
+    console.error(err);
+    proc.classList.remove('on');
+    statusLine.textContent = 'Error: ' + (err && err.message ? err.message : 'could not remove background');
+    statusLine.className   = 'status-line err';
+    removeBgBtn.disabled   = false;
+  }
+}
+
+// ---- Magic Wand ----
+function toggleWand() {
+  wandActive = !wandActive;
+  if (wandActive && brushActive) {
+    brushActive = false;
+    document.getElementById('brushBtn').classList.remove('active');
+    document.getElementById('brushControls').style.display = 'none';
+    document.getElementById('brushHint').style.display = 'none';
+    document.getElementById('brushLabel').textContent = 'Brush';
+    stage.classList.remove('brush-on');
+    document.getElementById('brushCursor').style.display = 'none';
+  }
+  if (wandActive && selActive) deactivateSel();
+  wandBtn.classList.toggle('active', wandActive);
+  stageImg.classList.toggle('wand-on', wandActive);
+  document.getElementById('wandLabel').textContent = wandActive ? 'Wand On — Click to Erase' : 'Magic Wand';
+  if (wandActive && resultUrl) showCutout();
+}
+
+function floodErase(canvas, startX, startY, tol) {
+  var ctx = canvas.getContext('2d');
+  var w   = canvas.width, h = canvas.height;
+  var id  = ctx.getImageData(0, 0, w, h);
+  var d   = id.data;
+  var i0  = (startY * w + startX) * 4;
+  var tR  = d[i0], tG = d[i0+1], tB = d[i0+2], tA = d[i0+3];
+  if (tA < 10) return false; // already transparent
+
+  var thresh  = tol * 2.5;      // slider 1-100 → effective distance 2.5-250
+  var visited = new Uint8Array(w * h);
+  var stack   = [startY * w + startX];
+
+  while (stack.length > 0) {
+    var idx = stack.pop();
+    if (visited[idx]) continue;
+    visited[idx] = 1;
+    var pi = idx * 4;
+    if (d[pi+3] < 10) continue;
+    var dr = d[pi]-tR, dg = d[pi+1]-tG, db = d[pi+2]-tB;
+    if (Math.sqrt(dr*dr + dg*dg + db*db) > thresh) continue;
+    d[pi+3] = 0;
+    var cx = idx % w, cy = (idx / w) | 0;
+    if (cx > 0)   stack.push(idx - 1);
+    if (cx < w-1) stack.push(idx + 1);
+    if (cy > 0)   stack.push(idx - w);
+    if (cy < h-1) stack.push(idx + w);
+  }
+
+  ctx.putImageData(id, 0, 0);
+  return true;
+}
+
+function refreshResult() {
+  resultCanvas.toBlob(function (blob) {
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    resultUrl = URL.createObjectURL(blob);
+    // Preserve whichever view (cutout / black) is currently active
+    var activeView = 'cutout';
+    [].forEach.call(viewSeg.children, function (b) {
+      if (b.classList.contains('on')) activeView = b.dataset.view;
+    });
+    stageImg.src = resultUrl;
+    if (activeView === 'black') {
+      stage.classList.add('stage-black');
+      checkerBg.classList.remove('on');
+    } else {
+      stage.classList.remove('stage-black');
+      checkerBg.classList.add('on');
+    }
+  }, 'image/png');
+}
+
+function doUndo() {
+  if (!undoStack.length || !resultCanvas) return;
+  var ctx = resultCanvas.getContext('2d');
+  ctx.putImageData(undoStack.pop(), 0, 0);
+  document.getElementById('undoBtn').disabled = undoStack.length === 0;
+  refreshResult();
+}
+
+// ---- Brush Tool ----
+function toggleBrush() {
+  brushActive = !brushActive;
+  if (brushActive) {
+    wandActive = false;
+    wandBtn.classList.remove('active');
+    stageImg.classList.remove('wand-on');
+    document.getElementById('wandLabel').textContent = 'Magic Wand';
+    deactivateSel();
+    if (resultUrl) showCutout();
+  }
+  document.getElementById('brushBtn').classList.toggle('active', brushActive);
+  document.getElementById('brushControls').style.display = brushActive ? '' : 'none';
+  document.getElementById('brushHint').style.display     = brushActive ? '' : 'none';
+  document.getElementById('brushLabel').textContent = brushActive ? 'Brush On — Hold to Paint' : 'Brush';
+  stage.classList.toggle('brush-on', brushActive);
+  if (!brushActive) {
+    document.getElementById('brushCursor').style.display = 'none';
+    restoreBrushCanvas();
+  } else {
+    syncBrushCanvas();
+  }
+}
+
+function getDisplayBrushRadius() {
+  if (!resultCanvas) return brushSize / 2;
+  var imgRect = stageImg.getBoundingClientRect();
+  return Math.max(3, (brushSize / 2) * (imgRect.width / resultCanvas.width));
+}
+
+function paintBrushAt(cx, cy) {
+  if (!resultCanvas) return;
+  var ctx = resultCanvas.getContext('2d');
+  var w = resultCanvas.width, h = resultCanvas.height;
+  var r = Math.max(1, Math.round(brushSize / 2));
+  var x0 = Math.max(0, cx - r), y0 = Math.max(0, cy - r);
+  var x1 = Math.min(w - 1, cx + r), y1 = Math.min(h - 1, cy + r);
+  var bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+  if (bw <= 0 || bh <= 0) return;
+  var id = ctx.getImageData(x0, y0, bw, bh);
+  var d  = id.data;
+  for (var py = 0; py < bh; py++) {
+    for (var px = 0; px < bw; px++) {
+      var dx = (x0 + px) - cx, dy = (y0 + py) - cy;
+      if (dx*dx + dy*dy > r*r) continue;
+      var i = (py * bw + px) * 4;
+      if (brushMode === 'erase') {
+        d[i + 3] = 0;
+      } else if (srcImageData) {
+        var si = ((y0 + py) * w + (x0 + px)) * 4;
+        d[i]     = srcImageData.data[si];
+        d[i + 1] = srcImageData.data[si + 1];
+        d[i + 2] = srcImageData.data[si + 2];
+        d[i + 3] = 255;
+      }
+    }
+  }
+  ctx.putImageData(id, x0, y0);
+}
+
+function syncBrushCanvas() {
+  if (!resultCanvas) return;
+  var bc = document.getElementById('brushCanvas');
+  var rect = stageImg.getBoundingClientRect();
+  var sr   = stage.getBoundingClientRect();
+  bc.style.left = (rect.left - sr.left) + 'px';
+  bc.style.top  = (rect.top  - sr.top)  + 'px';
+  bc.width  = Math.round(rect.width);
+  bc.height = Math.round(rect.height);
+  var bctx = bc.getContext('2d');
+  bctx.clearRect(0, 0, bc.width, bc.height);
+  bctx.drawImage(resultCanvas, 0, 0, bc.width, bc.height);
+  bc.style.display = 'block';
+  stageImg.style.opacity = '0';
+}
+
+function refreshBrushCanvas() {
+  var bc = document.getElementById('brushCanvas');
+  if (bc.style.display === 'none') return;
+  var bctx = bc.getContext('2d');
+  bctx.clearRect(0, 0, bc.width, bc.height);
+  bctx.drawImage(resultCanvas, 0, 0, bc.width, bc.height);
+}
+
+function restoreBrushCanvas() {
+  var bc = document.getElementById('brushCanvas');
+  bc.style.display = 'none';
+  stageImg.style.opacity = '';
+}
+
+// ---- Selection Tool ----
+function deactivateSel() {
+  selActive = false; selDown = false; selStart = null; selEnd = null; selRect = null; selPath = [];
+  if (selAnimId) { cancelAnimationFrame(selAnimId); selAnimId = null; }
+  var sc = document.getElementById('selCanvas');
+  if (sc) { sc.getContext('2d').clearRect(0, 0, sc.width, sc.height); sc.style.display = 'none'; }
+  stage.classList.remove('sel-on');
+  var selBtn = document.getElementById('selBtn');
+  if (selBtn) selBtn.classList.remove('active');
+  document.getElementById('selHint').style.display = 'none';
+  document.getElementById('selActions').style.display = 'none';
+  document.getElementById('selModeSeg').style.display = 'none';
+  document.getElementById('selLabel').textContent = 'Select Area';
+}
+
+function updateSelHint() {
+  var h = document.getElementById('selHint');
+  if (selMode === 'rect') {
+    h.textContent = 'Drag to draw a rectangle, then erase or restore the area.';
+    document.getElementById('selLabel').textContent = selActive ? 'Select — Drag a Rectangle' : 'Select Area';
+    document.getElementById('selIcon').innerHTML = '<rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 2"/>';
+  } else {
+    h.textContent = 'Hold and drag to draw a freehand shape, then erase or restore it.';
+    document.getElementById('selLabel').textContent = selActive ? 'Select — Draw a Shape' : 'Select Area';
+    document.getElementById('selIcon').innerHTML = '<path d="M5 8 C4 4 9 2 14 4 C19 6 20 12 17 16 C14 20 8 20 5 16 C3 13 4 10 5 8Z" stroke-dasharray="4 2"/><path d="M5 8 L3 17 L11 15" stroke-linecap="round" stroke-linejoin="round"/>';
+  }
+}
+
+function toggleSel() {
+  selActive = !selActive;
+  if (selActive) {
+    if (brushActive) toggleBrush();
+    if (wandActive)  toggleWand();
+    var sc = document.getElementById('selCanvas');
+    sc.style.display = 'block';
+    resizeSelCanvas();
+    drawMarquee();
+  } else {
+    deactivateSel(); return;
+  }
+  document.getElementById('selBtn').classList.add('active');
+  document.getElementById('selModeSeg').style.display = '';
+  document.getElementById('selHint').style.display = '';
+  stage.classList.add('sel-on');
+  updateSelHint();
+}
+
+function resizeSelCanvas() {
+  var sc = document.getElementById('selCanvas');
+  var sr = stage.getBoundingClientRect();
+  sc.width = Math.round(sr.width); sc.height = Math.round(sr.height);
+  sc.style.width = sc.width + 'px'; sc.style.height = sc.height + 'px';
+}
+
+function drawMarquee() {
+  if (!selActive) return;
+  selAnimId = requestAnimationFrame(drawMarquee);
+  var sc = document.getElementById('selCanvas');
+  var ctx = sc.getContext('2d');
+  ctx.clearRect(0, 0, sc.width, sc.height);
+  selOffset = (selOffset + 0.4) % 16;
+
+  if (selMode === 'rect') {
+    if (!selStart || !selEnd) return;
+    var x = Math.min(selStart.x, selEnd.x), y = Math.min(selStart.y, selEnd.y);
+    var w = Math.abs(selEnd.x - selStart.x), h = Math.abs(selEnd.y - selStart.y);
+    if (w < 2 || h < 2) return;
+    ctx.save();
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 6]);
+    ctx.lineDashOffset = -selOffset;
+    ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+    ctx.strokeRect(x + 0.5, y + 0.5, w, h);
+    ctx.lineDashOffset = -selOffset + 6;
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.strokeRect(x + 0.5, y + 0.5, w, h);
+    ctx.restore();
+  } else {
+    if (selPath.length < 2) return;
+    var ii;
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 6]);
+    ctx.lineDashOffset = -selOffset;
+    ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+    ctx.beginPath();
+    ctx.moveTo(selPath[0].x + 0.5, selPath[0].y + 0.5);
+    for (ii = 1; ii < selPath.length; ii++) ctx.lineTo(selPath[ii].x + 0.5, selPath[ii].y + 0.5);
+    if (!selDown && selPath.length > 2) ctx.closePath();
+    ctx.stroke();
+    ctx.lineDashOffset = -selOffset + 6;
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.moveTo(selPath[0].x + 0.5, selPath[0].y + 0.5);
+    for (ii = 1; ii < selPath.length; ii++) ctx.lineTo(selPath[ii].x + 0.5, selPath[ii].y + 0.5);
+    if (!selDown && selPath.length > 2) ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function applySelOp(mode) {
+  if (!resultCanvas) return;
+  var ctx = resultCanvas.getContext('2d');
+
+  if (selMode === 'rect') {
+    if (!selRect) return;
+    undoStack.push(ctx.getImageData(0, 0, resultCanvas.width, resultCanvas.height));
+    if (undoStack.length > 20) undoStack.shift();
+    document.getElementById('undoBtn').disabled = false;
+    var rx = Math.max(0, selRect.x), ry = Math.max(0, selRect.y);
+    var rw = Math.min(resultCanvas.width - rx, selRect.w);
+    var rh = Math.min(resultCanvas.height - ry, selRect.h);
+    if (rw <= 0 || rh <= 0) return;
+    var id = ctx.getImageData(rx, ry, rw, rh);
+    var d = id.data;
+    for (var i = 0; i < d.length; i += 4) {
+      if (mode === 'erase') {
+        d[i + 3] = 0;
+      } else if (srcImageData) {
+        var ppx = rx + ((i / 4) % rw);
+        var ppy = ry + Math.floor((i / 4) / rw);
+        var si = (ppy * resultCanvas.width + ppx) * 4;
+        d[i]     = srcImageData.data[si];
+        d[i + 1] = srcImageData.data[si + 1];
+        d[i + 2] = srcImageData.data[si + 2];
+        d[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(id, rx, ry);
+  } else {
+    // lasso — rasterise polygon into a mask then apply per-pixel
+    if (selPath.length < 3) return;
+    var sr2 = stage.getBoundingClientRect();
+    var imgRect2 = stageImg.getBoundingClientRect();
+    var offX2 = imgRect2.left - sr2.left;
+    var offY2 = imgRect2.top  - sr2.top;
+    var scX2  = resultCanvas.width  / imgRect2.width;
+    var scY2  = resultCanvas.height / imgRect2.height;
+    var maskC = document.createElement('canvas');
+    maskC.width  = resultCanvas.width;
+    maskC.height = resultCanvas.height;
+    var mctx = maskC.getContext('2d');
+    mctx.fillStyle = '#fff';
+    mctx.beginPath();
+    mctx.moveTo((selPath[0].x - offX2) * scX2, (selPath[0].y - offY2) * scY2);
+    for (var k = 1; k < selPath.length; k++)
+      mctx.lineTo((selPath[k].x - offX2) * scX2, (selPath[k].y - offY2) * scY2);
+    mctx.closePath();
+    mctx.fill();
+    var maskData = mctx.getImageData(0, 0, maskC.width, maskC.height);
+    undoStack.push(ctx.getImageData(0, 0, resultCanvas.width, resultCanvas.height));
+    if (undoStack.length > 20) undoStack.shift();
+    document.getElementById('undoBtn').disabled = false;
+    var outData = ctx.getImageData(0, 0, resultCanvas.width, resultCanvas.height);
+    var od = outData.data, md = maskData.data;
+    var total = resultCanvas.width * resultCanvas.height;
+    for (var j = 0; j < total; j++) {
+      if (md[j * 4] > 128) {
+        if (mode === 'erase') {
+          od[j * 4 + 3] = 0;
+        } else if (srcImageData) {
+          od[j * 4]     = srcImageData.data[j * 4];
+          od[j * 4 + 1] = srcImageData.data[j * 4 + 1];
+          od[j * 4 + 2] = srcImageData.data[j * 4 + 2];
+          od[j * 4 + 3] = 255;
+        }
+      }
+    }
+    ctx.putImageData(outData, 0, 0);
+  }
+
+  // Refresh display
+  var bc = document.getElementById('brushCanvas');
+  if (bc.style.display !== 'none') {
+    var bctx = bc.getContext('2d');
+    bctx.clearRect(0, 0, bc.width, bc.height);
+    bctx.drawImage(resultCanvas, 0, 0, bc.width, bc.height);
+  } else {
+    stageImg.src = resultCanvas.toDataURL('image/png');
+  }
+  // Clear selection but keep tool active
+  selPath = []; selStart = null; selEnd = null; selRect = null;
+  document.getElementById('selActions').style.display = 'none';
+  var sc = document.getElementById('selCanvas');
+  sc.getContext('2d').clearRect(0, 0, sc.width, sc.height);
+}
+
+// ---- Download ----
+function doDownload() {
+  if (!resultCanvas) return;
+  resultCanvas.toBlob(function (blob) {
+    var a = document.createElement('a');
+    a.download = srcName + '_cutout.png';
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+  }, 'image/png');
+}
+
+// ---- Wiring ----
+uploadBtn.addEventListener('click', function () { fileInput.click(); });
+dropzone.addEventListener('click', function ()  { fileInput.click(); });
+fileInput.addEventListener('change', function (e) {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+stage.addEventListener('dragenter', function (e) {
+  e.preventDefault();
+  dropzone.classList.remove('gone');
+  dropzone.classList.add('drag-on');
+});
+stage.addEventListener('dragover', function (e) { e.preventDefault(); });
+stage.addEventListener('dragleave', function () {
+  dropzone.classList.remove('drag-on');
+  if (srcUrl) dropzone.classList.add('gone');
+});
+stage.addEventListener('drop', function (e) {
+  e.preventDefault();
+  dropzone.classList.remove('drag-on');
+  if (srcUrl) dropzone.classList.add('gone');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+removeBgBtn.addEventListener('click', doRemoveBg);
+downloadBtn.addEventListener('click', doDownload);
+
+var wandBtn = document.getElementById('wandBtn');
+wandBtn.addEventListener('click', toggleWand);
+document.getElementById('undoBtn').addEventListener('click', doUndo);
+document.getElementById('tolSlider').addEventListener('input', function (e) {
+  wandTol = parseInt(e.target.value, 10);
+  document.getElementById('tolVal').textContent = wandTol;
+});
+
+// Wand click on the stage image
+stageImg.addEventListener('click', function (e) {
+  if (!wandActive || !resultCanvas) return;
+  var rect = stageImg.getBoundingClientRect();
+  var sx   = resultCanvas.width  / rect.width;
+  var sy   = resultCanvas.height / rect.height;
+  var x    = Math.max(0, Math.min(resultCanvas.width  - 1, Math.round((e.clientX - rect.left) * sx)));
+  var y    = Math.max(0, Math.min(resultCanvas.height - 1, Math.round((e.clientY - rect.top)  * sy)));
+
+  // Pre-check: is this pixel visible?
+  var pxd = resultCanvas.getContext('2d').getImageData(x, y, 1, 1).data;
+  if (pxd[3] < 10) return;
+
+  // Save undo snapshot before modifying
+  var snap = resultCanvas.getContext('2d').getImageData(0, 0, resultCanvas.width, resultCanvas.height);
+  var changed = floodErase(resultCanvas, x, y, wandTol);
+  if (!changed) return;
+
+  undoStack.push(snap);
+  if (undoStack.length > 20) undoStack.shift();
+  document.getElementById('undoBtn').disabled = false;
+
+  refreshResult();
+});
+
+viewSeg.addEventListener('click', function (e) {
+  var btn = e.target.closest('.segbtn'); if (!btn) return;
+  if (btn.dataset.view === 'original') showOriginal();
+  else if (btn.dataset.view === 'black') showBlack();
+  else showCutout();
+});
+
+// Brush wiring
+var brushBtn    = document.getElementById('brushBtn');
+var brushCursor = document.getElementById('brushCursor');
+
+brushBtn.addEventListener('click', toggleBrush);
+
+document.getElementById('brushModeSeg').addEventListener('click', function(e) {
+  var btn = e.target.closest('.segbtn'); if (!btn) return;
+  brushMode = btn.dataset.bmode;
+  [].forEach.call(document.getElementById('brushModeSeg').children, function(b) {
+    b.classList.toggle('on', b.dataset.bmode === brushMode);
+  });
+});
+
+document.getElementById('brushSizeSlider').addEventListener('input', function(e) {
+  brushSize = parseInt(e.target.value, 10);
+  document.getElementById('brushSizeVal').textContent = brushSize;
+});
+
+stage.addEventListener('mousemove', function(e) {
+  if (!brushActive) return;
+  var stageRect = stage.getBoundingClientRect();
+  var mx = e.clientX - stageRect.left, my = e.clientY - stageRect.top;
+  var displayR = getDisplayBrushRadius();
+  var diam = Math.round(displayR * 2);
+  brushCursor.style.display = 'block';
+  brushCursor.style.width   = diam + 'px';
+  brushCursor.style.height  = diam + 'px';
+  brushCursor.style.left    = Math.round(mx - displayR) + 'px';
+  brushCursor.style.top     = Math.round(my - displayR) + 'px';
+  if (brushDown && resultCanvas) {
+    var imgRect = stageImg.getBoundingClientRect();
+    var cx = Math.round((e.clientX - imgRect.left) * resultCanvas.width  / imgRect.width);
+    var cy = Math.round((e.clientY - imgRect.top)  * resultCanvas.height / imgRect.height);
+    if (cx >= 0 && cy >= 0 && cx < resultCanvas.width && cy < resultCanvas.height) {
+      paintBrushAt(cx, cy);
+      brushMoved = true;
+      refreshBrushCanvas();
+    }
+  }
+});
+
+stage.addEventListener('mouseleave', function() {
+  if (brushActive) brushCursor.style.display = 'none';
+  if (brushDown) {
+    brushDown = false;
+    if (brushMoved && brushSnap) {
+      undoStack.push(brushSnap);
+      if (undoStack.length > 20) undoStack.shift();
+      document.getElementById('undoBtn').disabled = false;
+      brushSnap = null;
+    }
+    if (brushMoved) refreshResult();
+    brushMoved = false;
+  }
+});
+
+stage.addEventListener('mousedown', function(e) {
+  if (!brushActive || !resultCanvas || e.button !== 0) return;
+  e.preventDefault();
+  brushDown  = true;
+  brushMoved = false;
+  brushSnap  = resultCanvas.getContext('2d').getImageData(0, 0, resultCanvas.width, resultCanvas.height);
+  var imgRect = stageImg.getBoundingClientRect();
+  var cx = Math.round((e.clientX - imgRect.left) * resultCanvas.width  / imgRect.width);
+  var cy = Math.round((e.clientY - imgRect.top)  * resultCanvas.height / imgRect.height);
+  if (cx >= 0 && cy >= 0 && cx < resultCanvas.width && cy < resultCanvas.height) {
+    paintBrushAt(cx, cy);
+    brushMoved = true;
+    refreshBrushCanvas();
+  }
+});
+
+stage.addEventListener('mouseup', function(e) {
+  if (!brushDown || e.button !== 0) return;
+  brushDown = false;
+  if (brushMoved && brushSnap) {
+    undoStack.push(brushSnap);
+    if (undoStack.length > 20) undoStack.shift();
+    document.getElementById('undoBtn').disabled = false;
+    brushSnap = null;
+  }
+  if (brushMoved) refreshResult();
+  brushMoved = false;
+});
+
+// Selection wiring
+document.getElementById('selBtn').addEventListener('click', toggleSel);
+document.getElementById('selEraseBtn').addEventListener('click', function() { applySelOp('erase'); });
+document.getElementById('selRestoreBtn').addEventListener('click', function() { applySelOp('restore'); });
+
+document.getElementById('selModeSeg').addEventListener('click', function(e) {
+  var btn = e.target.closest('.segbtn'); if (!btn) return;
+  selMode = btn.dataset.smode;
+  [].forEach.call(document.getElementById('selModeSeg').children, function(b) {
+    b.classList.toggle('on', b.dataset.smode === selMode);
+  });
+  selPath = []; selStart = null; selEnd = null; selRect = null;
+  document.getElementById('selActions').style.display = 'none';
+  var sc = document.getElementById('selCanvas');
+  sc.getContext('2d').clearRect(0, 0, sc.width, sc.height);
+  updateSelHint();
+});
+
+stage.addEventListener('mousedown', function(e) {
+  if (!selActive || !resultCanvas || e.button !== 0) return;
+  e.preventDefault();
+  selDown = true; selRect = null; selPath = [];
+  document.getElementById('selActions').style.display = 'none';
+  resizeSelCanvas();
+  var sr = stage.getBoundingClientRect();
+  var pt = { x: e.clientX - sr.left, y: e.clientY - sr.top };
+  if (selMode === 'rect') {
+    selStart = pt;
+    selEnd   = { x: pt.x, y: pt.y };
+  } else {
+    selPath = [pt];
+  }
+});
+
+stage.addEventListener('mousemove', function(e) {
+  if (!selActive || !selDown) return;
+  var sr = stage.getBoundingClientRect();
+  var pt = { x: e.clientX - sr.left, y: e.clientY - sr.top };
+  if (selMode === 'rect') {
+    selEnd = pt;
+  } else {
+    var last = selPath[selPath.length - 1];
+    if (last) {
+      var ddx = pt.x - last.x, ddy = pt.y - last.y;
+      if (ddx * ddx + ddy * ddy > 16) selPath.push(pt);
+    }
+  }
+});
+
+stage.addEventListener('mouseup', function(e) {
+  if (!selActive || !selDown || e.button !== 0) return;
+  selDown = false;
+  var sr = stage.getBoundingClientRect();
+  var pt = { x: e.clientX - sr.left, y: e.clientY - sr.top };
+  if (selMode === 'rect') {
+    selEnd = pt;
+    var dw = Math.abs(selEnd.x - selStart.x), dh = Math.abs(selEnd.y - selStart.y);
+    if (dw < 5 || dh < 5) { selStart = null; selEnd = null; return; }
+    var imgRect = stageImg.getBoundingClientRect();
+    var offX = imgRect.left - sr.left, offY = imgRect.top - sr.top;
+    var sx = Math.min(selStart.x, selEnd.x) - offX;
+    var sy = Math.min(selStart.y, selEnd.y) - offY;
+    var scaleX = resultCanvas.width  / imgRect.width;
+    var scaleY = resultCanvas.height / imgRect.height;
+    selRect = {
+      x: Math.round(sx * scaleX),
+      y: Math.round(sy * scaleY),
+      w: Math.round(dw * scaleX),
+      h: Math.round(dh * scaleY)
+    };
+    document.getElementById('selActions').style.display = '';
+  } else {
+    selPath.push(pt);
+    if (selPath.length > 2) {
+      document.getElementById('selActions').style.display = '';
+    } else {
+      selPath = [];
+    }
+  }
+});
+
+stage.addEventListener('mouseleave', function(e) {
+  if (selActive && selDown) {
+    selDown = false;
+    if (selMode === 'rect') {
+      var dw = selEnd ? Math.abs(selEnd.x - selStart.x) : 0;
+      var dh = selEnd ? Math.abs(selEnd.y - selStart.y) : 0;
+      if (dw > 5 && dh > 5) {
+        var imgRect = stageImg.getBoundingClientRect();
+        var sr = stage.getBoundingClientRect();
+        var offX = imgRect.left - sr.left, offY = imgRect.top - sr.top;
+        var sx = Math.min(selStart.x, selEnd.x) - offX;
+        var sy = Math.min(selStart.y, selEnd.y) - offY;
+        var scaleX = resultCanvas.width  / imgRect.width;
+        var scaleY = resultCanvas.height / imgRect.height;
+        selRect = {
+          x: Math.round(sx * scaleX),
+          y: Math.round(sy * scaleY),
+          w: Math.round(dw * scaleX),
+          h: Math.round(dh * scaleY)
+        };
+        document.getElementById('selActions').style.display = '';
+      }
+    } else {
+      if (selPath.length > 2) {
+        document.getElementById('selActions').style.display = '';
+      } else {
+        selPath = [];
+      }
+    }
+  }
+});
+
+// ---- Panel toggle ----
+var appEl  = document.querySelector('.app');
+var panelEl = document.querySelector('.panel');
+var panelToggle = document.getElementById('panelToggle');
+
+function positionTab() {
+  var hidden = appEl.classList.contains('panel-hidden');
+  var mobile = window.matchMedia('(max-width: 880px)').matches;
+  var tw = panelToggle.offsetWidth, th = panelToggle.offsetHeight;
+  var left, top, pr;
+  if (mobile) {
+    if (hidden) { left = (window.innerWidth - tw) / 2; top = window.innerHeight - th; }
+    else { pr = panelEl.getBoundingClientRect(); left = pr.left + pr.width / 2 - tw / 2; top = pr.top - th; }
+  } else {
+    if (hidden) { left = window.innerWidth - tw; top = (window.innerHeight - th) / 2; }
+    else { pr = panelEl.getBoundingClientRect(); left = pr.left - tw; top = pr.top + pr.height / 2 - th / 2; }
+  }
+  panelToggle.style.left      = Math.round(left) + 'px';
+  panelToggle.style.top       = Math.round(top)  + 'px';
+  panelToggle.style.right     = 'auto';
+  panelToggle.style.bottom    = 'auto';
+  panelToggle.style.transform = 'none';
+}
+
+panelToggle.addEventListener('click', function () {
+  var hidden = appEl.classList.toggle('panel-hidden');
+  panelToggle.setAttribute('aria-label', hidden ? 'Show panel' : 'Hide panel');
+  panelToggle.setAttribute('title',      hidden ? 'Show panel' : 'Hide panel');
+  requestAnimationFrame(positionTab);
+});
+
+window.addEventListener('resize', positionTab);
+positionTab();
+
+var navmenu = document.getElementById('navmenu');
+document.getElementById('menuBtn').addEventListener('click', function () { navmenu.classList.add('open'); });
+document.getElementById('navClose').addEventListener('click', function () { navmenu.classList.remove('open'); });
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') navmenu.classList.remove('open'); });
+
+var mailEl = document.querySelector('.navmenu-mail');
+if (mailEl) {
+  var addr = mailEl.getAttribute('data-user') + '@' + mailEl.getAttribute('data-domain');
+  mailEl.textContent = addr;
+  mailEl.setAttribute('href', 'mailto:' + addr);
+}
+</script>
+
+</body>
+</html>
