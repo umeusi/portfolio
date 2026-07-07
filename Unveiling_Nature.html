@@ -133,6 +133,7 @@
     gap: 12px;
     z-index: 5;
     pointer-events: none;
+    filter: drop-shadow(0 1px 10px rgba(8,12,12,0.7));
   }
   .cue span {
     font-family: var(--font-sans);
@@ -140,13 +141,13 @@
     font-weight: 500;
     letter-spacing: 0.34em;
     text-transform: uppercase;
-    color: rgba(250, 248, 244, 0.78);
+    color: rgba(250, 248, 244, 0.92);
     text-indent: 0.34em;
   }
   .cue-line {
     width: 1px;
     height: 56px;
-    background: linear-gradient(to bottom, rgba(250,248,244,0.66), rgba(250,248,244,0));
+    background: linear-gradient(to bottom, rgba(250,248,244,0.88), rgba(250,248,244,0));
     transform-origin: top;
   }
   @media (prefers-reduced-motion: no-preference) {
@@ -480,6 +481,9 @@
     margin-bottom: 3px;
   }
   @media (max-width: 640px) {
+    .cue span { color: #1A1916; text-shadow: none; }
+    .cue-line { background: linear-gradient(to bottom, rgba(26,25,22,0.7), rgba(26,25,22,0)); }
+    .cue { filter: none; }
     .plate-pair { grid-template-columns: 1fr; gap: clamp(28px, 8vw, 40px); }
     /* hide the flanking "Y.Parris" / "2026" on the cover lockup on phones */
     .cover-meta { display: none; }
@@ -735,7 +739,7 @@
       </ul>
       <div class="menu-contact">
         <span class="menu-divider"></span>
-        <a class="menu-email" href="mailto:info@yumiparris.com">info@yumiparris.com</a>
+        <a class="menu-email" href="/cdn-cgi/l/email-protection#1b72757d745b626e76726b7a6969726835787476"><span class="__cf_email__" data-cfemail="137a7d757c536a667e7a637261617a603d707c7e">[email&#160;protected]</span></a>
       </div>
     </div>
   </nav>
@@ -752,6 +756,11 @@
 
       <!-- Credit on the first painting -->
       <p class="first-credit" id="firstCredit"><em>Unveiling Nature</em></p>
+
+      <!-- Scroll cue -->
+      <div class="cue" id="cue">
+        <div class="cue-line"></div>
+      </div>
 
       <!-- Opening statement -->
       <section class="layer layer--statement" id="statement" data-screen-label="Opening statement">
@@ -855,7 +864,7 @@
           <a href="about.html">About</a>
           <a href="painters-tool.html">Painter&rsquo;s Tool</a>
           <a href="notan.html">Notan</a>
-          <a href="mailto:info@yumiparris.com">Contact</a>
+          <a href="/cdn-cgi/l/email-protection#86efe8e0e9c6fff3ebeff6e7f4f4eff5a8e5e9eb">Contact</a>
         </nav>
       </div>
     </div>
@@ -865,7 +874,7 @@
     </div>
   </footer>
 
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     (function () {
       var scrolly   = document.getElementById('scrolly');
       var cover     = document.getElementById('cover');
@@ -913,6 +922,10 @@
         scrim.style.opacity = String(lerp(0, clamp(0.4 + 0.6 * veil, 0, 1), seg(p, 0.42, 0.78)));
 
         // Credit: visible immediately, then fades out drifting up
+        // Cue fades out as soon as scrolling begins (0 → 0.12)
+        var cueEl = document.getElementById('cue');
+        if (cueEl) cueEl.style.opacity = String(1 - seg(p, 0, 0.12));
+
         var creditIn = 1;
         var creditOut = seg(p, 0.42, 0.55);
         firstCredit.style.opacity = String(creditIn * (1 - creditOut));
