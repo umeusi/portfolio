@@ -730,6 +730,8 @@
     .drawer-masters .detail.is-pigment { position: relative; inset: auto; z-index: auto; transition: none; box-shadow: none; }
     .drawer-masters .detail:not(.is-pigment) .detail-back { display: none; }
   }
+  /* hide the compiled brand text — replaced by the fixed emblem below */
+  .brand { opacity: 0; pointer-events: none; }
 </style>
 
 <script defer src="/_vercel/insights/script.js"></script>
@@ -750,6 +752,32 @@
   </svg>
 </template>
 <div id="root"></div>
+
+<a href="index.html" aria-label="Y.Parris — home" id="site-emblem" style="
+  position: fixed;
+  top: calc(clamp(20px, 2.4vw, 30px) + 7px);
+  left: clamp(22px, 3vw, 44px);
+  z-index: 50;
+  display: inline-block;
+  line-height: 0;
+  transition: opacity 0.2s ease;
+"><img src="assets/emblem_brown.png" alt="Y.Parris" style="height:26px;width:auto;display:block;" /></a>
+
+<script>
+(function () {
+  var emblem = document.getElementById('site-emblem');
+  function update() {
+    if (window.innerWidth > 760) { emblem.style.opacity = '1'; return; }
+    var drawerOpen = document.querySelector('.drawer.open, .navmenu.open, .handlebar.open');
+    emblem.style.opacity = drawerOpen ? '0' : '1';
+    emblem.style.pointerEvents = drawerOpen ? 'none' : 'auto';
+  }
+  var mo = new MutationObserver(update);
+  mo.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
+  window.addEventListener('resize', update);
+  update();
+})();
+</script>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>

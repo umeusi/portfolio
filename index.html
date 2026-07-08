@@ -1,229 +1,87 @@
 <!DOCTYPE html>
+<!-- @dsCard group="Brand" name="Overview" subtitle="Gallery walk — staggered hang of selected works" viewport="1440x900" -->
 <html lang="en" class="theme-light">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Y.Parris — Landing page</title>
+<title>Y.Parris — Overview</title>
 <link rel="stylesheet" href="colors_and_type.css" />
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  :root { --cover-field: var(--parris-brown); }
-  html { background-color: var(--cover-field); transition: background-color 600ms var(--ease); }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  html { background: var(--bg-3); }
   body {
-    background-color: var(--cover-field);
-    color: var(--parris-white);
+    background: var(--bg-3);
+    color: var(--fg1);
+    height: 100vh;
+    overflow: hidden;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
   /* ============================================================
-     SCROLLY STAGE — one pinned viewport driven by scroll progress
+     STAGE — one gallery room, scrolled horizontally
      ============================================================ */
-  .scrolly {
+  .room {
     position: relative;
-    height: 520vh;            /* travel distance — unhurried */
-  }
-  .stage {
-    position: sticky;
-    top: 0;
     height: 100vh;
-    width: 100%;
-    overflow: hidden;
-  }
-  .layer {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    will-change: opacity, filter, transform;
-  }
-
-  /* ---- IMAGE (the painting), full-bleed behind everything ---- */
-  .layer--image {
-    z-index: 1;
-    background: #1c2a2a;
-  }
-  .layer--image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: 50% 38%;
-    display: block;
-    will-change: filter;
-  }
-
-  /* ---- SCRIM that darkens the painting as words arrive ---- */
-  .layer--scrim {
-    z-index: 2;
-    background:
-      radial-gradient(120% 90% at 50% 46%, rgba(12,18,18,0.20) 0%, rgba(12,18,18,0.62) 60%, rgba(8,12,12,0.82) 100%);
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  /* ---- COVER: ochre field with the centered signature ---- */
-  .layer--cover {
-    z-index: 4;
-    background-color: var(--cover-field);
-    transition: background-color 600ms var(--ease);
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    /* picture-light glow over a deeper linen wall */
+    background:
+      radial-gradient(150% 70% at 50% -16%, rgba(255, 248, 234, 0.65), rgba(255, 248, 234, 0) 58%),
+      var(--bg-3);
   }
-  .cover-lockup {
+
+  /* ---- TOP BAR ---- */
+  .bar {
+    position: relative;
+    z-index: 20;
+    flex: 0 0 auto;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    width: 100%;
-    column-gap: clamp(36px, 7vw, 120px);
+    padding: clamp(20px, 2.4vw, 30px) clamp(22px, 3vw, 44px) 0;
   }
-  .cover-meta {
-    font-family: var(--font-serif);
-    font-size: clamp(13px, 1.15vw, 17px);
-    font-weight: 500;
-    letter-spacing: 0.34em;
-    text-transform: uppercase;
-    color: rgba(250, 248, 244, 0.92);
-    white-space: nowrap;
-    text-indent: 0.34em;
-  }
-  .cover-meta--left  { text-align: right; }
-  .cover-meta--right { text-align: left; }
-  .cover-logo {
-    width: 100px;
-    height: auto;
-    display: block;
-  }
-
-  /* scroll cue */
-  .cue {
-    position: absolute;
-    left: 50%;
-    bottom: clamp(28px, 5vh, 56px);
-    transform: translateX(-50%);
+  .bar-nav {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    z-index: 5;
-    pointer-events: none;
+    gap: clamp(20px, 2.4vw, 38px);
   }
-  .cue span {
+  .bar-nav a {
     font-family: var(--font-sans);
     font-size: 11px;
     font-weight: 500;
-    letter-spacing: 0.34em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(250, 248, 244, 0.78);
-    text-indent: 0.34em;
+    color: var(--fg2);
+    text-decoration: none;
+    text-indent: 0.2em;
+    transition: color var(--dur) var(--ease);
   }
-  .cue-line {
-    width: 1px;
-    height: 56px;
-    background: linear-gradient(to bottom, rgba(250,248,244,0.66), rgba(250,248,244,0));
-    transform-origin: top;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .cue-line { animation: cuepulse 2.4s var(--ease) infinite; }
-  }
-  @keyframes cuepulse {
-    0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
-    50%      { transform: scaleY(1);   opacity: 1; }
-  }
+  .bar-nav a:hover { color: var(--parris-brown); }
 
-  /* ---- STATEMENT: the opening thesis line over the blurred painting ---- */
-  .layer--statement {
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: clamp(28px, 6vw, 96px);
-    opacity: 0;
-    pointer-events: none;
-  }
-  .statement-inner {
-    max-width: min(1180px, 92vw);
-    text-align: center;
-  }
-  .statement-rule {
-    width: 46px;
-    height: 1px;
-    margin: 0 auto clamp(26px, 3.4vw, 42px);
-    background: rgba(250, 248, 244, 0.5);
-  }
-  .statement-text {
-    font-family: var(--font-serif);
-    font-weight: 500;
-    font-size: clamp(28px, 4.2vw, 62px);
-    line-height: 1.22;
-    letter-spacing: -0.005em;
-    color: var(--parris-white);
-    margin: 0;
-    text-wrap: balance;
-    text-shadow: 0 1px 30px rgba(8, 12, 12, 0.45);
-  }
-  .statement-text em {
-    font-style: italic;
-    color: #F1E3CB;
-  }
-
-  /* ---- credit on the first painting, centred over the image ---- */
-  .first-credit {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 5;
-    font-family: var(--font-sans);
-    font-size: var(--t-caption);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    text-align: center;
-    color: rgba(250, 248, 244, 0.82);
-    text-shadow: 0 1px 14px rgba(8, 12, 12, 0.7);
-    pointer-events: none;
-    opacity: 0;
-    margin: 0;
-  }
-  .first-credit em {
-    font-family: var(--font-serif);
-    font-style: italic;
-    text-transform: none;
-    letter-spacing: 0.01em;
-    font-size: 1.34em;
-    color: #FFFFFF;
-  }
-  /* desktop — enlarge the centred "Unveiling Nature" caption */
-  @media (min-width: 1025px) {
-    .first-credit { font-size: 18px; letter-spacing: 0.16em; }
-  }
-
-  /* ---- HEADER / HAMBURGER ---- */
+  /* ---- HAMBURGER (left cell of the bar) ---- */
   .menu-btn {
-    position: fixed;
-    top: calc(clamp(20px, 2.4vw, 30px) - 1px);
-    right: calc(clamp(22px, 3vw, 44px) - 12px);
-    z-index: 40;
-    width: 46px;
-    height: 46px;
-    display: flex;
+    justify-self: end;
+    width: 44px;
+    height: 44px;
+    margin-right: -11px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     border: none;
     background: transparent;
-    color: var(--parris-white);
+    color: var(--fg1);
     cursor: pointer;
     padding: 0;
-    filter: drop-shadow(0 1px 8px rgba(8, 12, 12, 0.45));
-    transition: color var(--dur) var(--ease), opacity var(--dur) var(--ease);
+    transition: color var(--dur) var(--ease);
   }
-  .menu-btn:hover { color: #E7C98C; }
-  .menu-btn svg { width: 26px; height: 26px; stroke-width: 1.6; }
+  .menu-btn:hover { color: var(--parris-brown); }
+  .menu-btn svg { width: 24px; height: 24px; stroke-width: 1.6; }
   .menu-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 
-  /* ---- MENU OVERLAY ---- */
+  /* ---- MENU OVERLAY (from Landing page) ---- */
   .menu {
     position: fixed;
     inset: 0;
@@ -240,8 +98,8 @@
   .menu.open { opacity: 1; visibility: visible; }
   .menu-close {
     position: absolute;
-    top: calc(clamp(20px, 2.4vw, 30px) - 1px);
-    right: calc(clamp(22px, 3vw, 44px) - 12px);
+    top: clamp(20px, 2.4vw, 30px);
+    right: clamp(22px, 3vw, 44px);
     width: 46px;
     height: 46px;
     display: flex;
@@ -264,8 +122,7 @@
     opacity: 0;
     transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
     transition-delay: 60ms;
-  }
-  .menu.open .menu-inner { transform: translateY(0); opacity: 1; }
+  }  .menu.open .menu-inner { transform: translateY(0); opacity: 1; }
 
   .menu-list {
     list-style: none;
@@ -289,23 +146,6 @@
   }
   .menu-link:hover { color: var(--parris-gray); }
   .menu-link[aria-current="page"] { color: var(--parris-blue); }
-  .menu-sub {
-    list-style: none;
-    margin: clamp(14px, 1.6vw, 20px) 0 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: clamp(9px, 1vw, 14px);
-  }
-  .menu-sub a {
-    font-family: var(--font-serif);
-    font-size: clamp(17px, 1.5vw, 22px);
-    font-weight: 400;
-    color: rgba(241, 237, 230, 0.72);
-    text-decoration: none;
-    transition: color var(--dur) var(--ease);
-  }
-  .menu-sub a:hover { color: var(--accent); }
 
   /* contact block beneath the menu links */
   .menu-contact {
@@ -329,630 +169,667 @@
     transition: color var(--dur) var(--ease);
   }
   .menu-email:hover { color: var(--parris-gray); }
-  .menu-contact-note {
-    font-family: var(--font-sans);
-    font-size: 15px;
-    letter-spacing: 0.01em;
-    color: rgba(250, 248, 244, 0.5);
-    margin: clamp(10px, 1.1vw, 14px) 0 0;
-  }
 
-  /* ============================================================
-     ESSAY — continuing thesis on gallery white
-     ============================================================ */
-  .essay {
-    position: relative;
-    z-index: 1;
-    background: var(--parris-white);
-    color: var(--fg1);
+  .bar-emblem {
+    justify-self: start;
   }
-
-  /* full-bleed pink painting plate */
-  .plate-hero {
-    margin: 0;
-    min-height: 100vh;
-    background: var(--parris-taupe);
+  .bar-emblem a { display: inline-block; }
+  .bar-emblem img {
+    height: 26px;
+    width: auto;
+    display: block;
+  }
+  .bar-mark {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: clamp(20px, 2.6vw, 30px);
-    padding: clamp(56px, 9vh, 120px) clamp(24px, 6vw, 96px);
+    gap: 7px;
   }
-  .plate-hero img {
-    display: block;
-    width: auto;
-    max-width: min(760px, 88vw);
-    max-height: 74vh;
-    height: auto;
-    box-shadow: 0 24px 70px rgba(17, 17, 17, 0.18);
-  }
-  .plate-cap {
+  .bar-mark img { height: 19px; width: auto; display: block; }
+  .bar-mark span {
     font-family: var(--font-sans);
-    font-size: var(--t-caption);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: rgba(40, 34, 26, 0.62);
-    text-align: center;
-    margin: 0;
-  }
-  .plate-cap em {
-    font-family: var(--font-serif);
-    font-style: italic;
-    text-transform: none;
-    letter-spacing: 0.01em;
-    font-size: 1.25em;
-    color: rgba(40, 34, 26, 0.82);
-  }
-
-  /* reading column */
-  .essay-body {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: clamp(80px, 12vh, 150px) clamp(24px, 6vw, 40px);
-  }
-  .essay-body p.essay-eyebrow {
-    font-family: var(--font-sans);
-    font-size: var(--t-eyebrow);
+    font-size: 9.5px;
     font-weight: 500;
-    line-height: 1.4;
-    letter-spacing: 0.28em;
+    letter-spacing: 0.32em;
     text-transform: uppercase;
     color: var(--fg3);
-    text-indent: 0.28em;
-    margin: 0 0 clamp(28px, 4vw, 44px);
-    padding-bottom: clamp(18px, 2.4vw, 26px);
-    border-bottom: 1px solid var(--line);
-  }
-  .essay-body p {
-    font-family: var(--font-serif);
-    font-size: clamp(19px, 1.55vw, 23px);
-    line-height: 1.66;
-    color: #2C2B26;
-    margin: 0 0 1.5em;
-    text-wrap: pretty;
-  }
-  .essay-body p:last-child { margin-bottom: 0; }
-  .essay-body p .lead-cap {
-    float: left;
-    font-family: var(--font-display);
-    font-size: clamp(72px, 8vw, 104px);
-    line-height: 0.72;
-    padding: 14px 14px 0 0;
-    color: var(--parris-brown);
-  }
-  .essay-body em { font-style: italic; color: var(--parris-brown); }
-  .essay-body q, .essay-body .sci { font-style: italic; }
-
-  /* paired reference plates */
-  .plate-pair {
-    margin: clamp(44px, 6vw, 76px) 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(20px, 3vw, 40px);
-    align-items: end;
-  }
-  .plate-pair figure { margin: 0; }
-  .plate-pair img {
-    display: block;
-    width: 100%;
-    height: auto;
-    background: #efe9df;
-  }
-  .plate-pair figcaption {
-    font-family: var(--font-sans);
-    font-size: 11px;
-    letter-spacing: 0.07em;
-    line-height: 1.45;
-    color: var(--fg3);
-    margin-top: 12px;
-  }
-  .plate-pair figcaption b {
-    font-weight: 500;
-    color: var(--fg2);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 3px;
-  }
-  @media (max-width: 640px) {
-    .plate-pair { grid-template-columns: 1fr; gap: clamp(28px, 8vw, 40px); }
-    /* hide the flanking "Y.Parris" / "2026" on the cover lockup on phones */
-    .cover-meta { display: none; }
-    /* keep her face in frame when the painting is cropped to a tall phone */
-    .layer--image img { object-position: 30% 33%; }
-    /* with the flanking texts hidden, collapse the lockup so the logo truly centers */
-    .cover-lockup { grid-template-columns: auto; justify-content: center; }
-    /* trim the top margin above the reading article to 60% on phones */
-    .essay-body { padding-top: clamp(48px, 7.2vh, 90px); }
-    /* tighten the dead space around the landscape "Study in neon pink" on phones */
-    .plate-hero {
-      min-height: auto;
-      padding-top: clamp(28px, 4.5vh, 60px);
-      padding-bottom: clamp(28px, 4.5vh, 60px);
-    }
+    text-indent: 0.32em;
   }
 
-  /* tablet / iPad portrait — the hero crops tall; shift the painting right and
-     lift the focus so her head stays fully in frame */
-  @media (min-width: 641px) and (max-width: 1024px) {
-    .layer--image img { object-position: 36% 22%; }
-  }
-
-  /* matched pair — both images cropped to the same height, captions aligned */
-  .plate-pair--match { align-items: start; }
-  .plate-pair--match img {
-    aspect-ratio: 1712 / 1926;
-    height: auto;
-    object-fit: cover;
-    object-position: center 26%;
-  }
-
-  /* single featured reference plate */
-  .plate-single {
-    margin: clamp(48px, 7vw, 84px) auto;
-    max-width: min(100%, 320px);
-  }
-  .plate-single img {
-    display: block;
-    width: 100%;
-    height: auto;
-    background: #efe9df;
-  }
-  .plate-single figcaption {
-    font-family: var(--font-sans);
-    font-size: 11px;
-    letter-spacing: 0.07em;
-    line-height: 1.45;
-    color: var(--fg3);
-    margin-top: 14px;
-    text-align: center;
-  }
-  .plate-single figcaption b {
-    font-weight: 500;
-    color: var(--fg2);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 3px;
-  }
-
-  /* inline figure references within body text */
-  .figref {
-    font-family: var(--font-sans);
-    font-size: 0.62em;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    color: var(--parris-brown);
-    white-space: nowrap;
-    vertical-align: 0.14em;
-  }
-
-  /* reveal-on-scroll */
-  .rise { opacity: 0; transform: translateY(26px); }
-  .rise.in { opacity: 1; transform: translateY(0); transition: opacity 900ms var(--ease), transform 900ms var(--ease); }
-  @media (prefers-reduced-motion: reduce) {
-    .rise { opacity: 1; transform: none; }
-  }
-
-  /* ---- contained image plates (drink me + closing) ---- */
-  .plate-contain {
-    position: relative;
-    z-index: 1;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
+  .bar-clock {
+    justify-self: end;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: clamp(20px, 2.6vw, 30px);
-    padding: clamp(72px, 12vh, 150px) clamp(24px, 6vw, 96px);
-  }
-  .plate-contain img {
-    display: block;
-    width: auto;
-    max-width: min(620px, 86vw);
-    max-height: 76vh;
-    height: auto;
-  }
-  .plate-contain--dark {
-    background: var(--parris-navy);
-  }
-  .plate-contain--dark img {
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-  }
-  .plate-contain--dark .plate-cap {
-    color: rgba(250, 248, 244, 0.6);
-  }
-  .plate-contain--dark .plate-cap em {
-    color: rgba(250, 248, 244, 0.92);
-  }
-  /* "Back to the gallery" CTA below the closing painting — design-system ghost button,
-     adapted for the dark navy plate (sharp 4px corners, EB Garamond 500, no icon) */
-  .back-to-gallery {
-    display: inline-block;
-    margin-top: clamp(30px, 4.5vh, 48px);
-    font-family: var(--font-serif);
-    font-size: 18px;
-    font-weight: 500;
-    letter-spacing: 0.01em;
-    color: var(--parris-white);
-    text-decoration: none;
-    padding: 9px 24px;
-    border: 1px solid rgba(241, 237, 230, 0.34);
-    border-radius: var(--r);
-    transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
-  }
-  .back-to-gallery:hover {
-    background: var(--parris-white);
-    border-color: var(--parris-white);
-    color: var(--parris-navy);
-  }
-  .back-to-gallery:focus-visible { outline: 2px solid var(--parris-white); outline-offset: 4px; }
-  .plate-contain--light {
-    background: var(--parris-white);
-  }
-  .plate-contain--light img {
-    max-width: min(820px, 90vw);
-    box-shadow: 0 24px 70px rgba(17, 17, 17, 0.18);
-  }
-  .plate-contain--light .plate-cap {
-    color: var(--fg3);
-  }
-  .plate-contain--light .plate-cap em {
-    color: var(--fg2);
-  }
-
-  /* ============================================================
-     FOOTER — ink navy (from Website UI Kit)
-     ============================================================ */
-  .site-footer {
-    position: relative;
-    z-index: 1;
-    background: var(--parris-espresso);
-    color: var(--parris-white);
-    padding: clamp(48px, 7vw, 64px) clamp(24px, 4vw, 48px) 40px;
-  }
-  .footer-top {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: clamp(28px, 4vw, 48px);
-    align-items: start;
-    padding-bottom: 48px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-  }
-  .footer-top img.foot-logo { height: 18px; margin-bottom: 18px; display: block; }
-  .footer-blurb {
-    color: rgba(250, 248, 244, 0.7);
-    max-width: 320px;
-    font-family: var(--font-serif);
-    font-size: 16px;
-    line-height: 1.6;
-    margin: 0;
-  }
-  .foot-label {
+    gap: 9px;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
     font-family: var(--font-sans);
-    font-size: 10.5px;
+    font-size: 11px;
+    font-weight: 500;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: rgba(250, 248, 244, 0.5);
-    margin: 0 0 16px;
+    color: var(--fg2);
+    white-space: nowrap;
   }
-  .foot-links { display: flex; flex-direction: column; }
-  .foot-links a {
-    font-family: var(--font-serif);
-    font-size: 17px;
-    color: rgba(250, 248, 244, 0.78);
-    padding: 5px 0;
-    text-decoration: none;
-    transition: color var(--dur) var(--ease);
+  .bar-clock .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
   }
-  .foot-links a:hover { color: var(--parris-white); }
-  .foot-studio {
+  @media (prefers-reduced-motion: no-preference) {
+    .bar-clock .dot { animation: breathe 2.6s var(--ease) infinite; }
+  }
+  @keyframes breathe { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+  .bar-clock time { font-variant-numeric: tabular-nums; color: var(--fg1); }
+
+  /* ---- THE HANG (horizontal track) ---- */
+  .track {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    gap: clamp(48px, 6vw, 104px);
+    padding: 0 clamp(40px, 16vw, 280px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    cursor: grab;
+    scrollbar-width: none;
+  }
+  .track::-webkit-scrollbar { display: none; }
+  .track.dragging { cursor: grabbing; scroll-behavior: auto; }
+
+  .hang {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(16px, 1.5vw, 22px);
+    transform: translateY(var(--y, 0px));
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .hang { animation: hangRise 1100ms cubic-bezier(0.22, 0.61, 0.36, 1) both; animation-delay: var(--d, 0ms); }
+  }
+  @keyframes hangRise {
+    from { transform: translateY(calc(var(--y, 0px) + 10px)); opacity: 0; }
+    to   { transform: translateY(var(--y, 0px)); opacity: 1; }
+  }
+
+  .plate {
+    position: relative;
+    align-self: flex-start;
+  }
+
+  /* slim frame, hung with a soft cast shadow */
+  .frame {
+    padding: 0;
+    background: var(--parris-pure-white);
+    border: 1px solid var(--line);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.6) inset,
+      0 40px 60px -30px rgba(40, 30, 14, 0.42),
+      0 8px 20px -12px rgba(40, 30, 14, 0.28);
+    transition: box-shadow 520ms var(--ease);
+    overflow: hidden;
+    font-size: 0;
+    line-height: 0;
+  }
+  .frame img {
+    display: block;
+    height: auto;
+    width: auto;
+    max-height: var(--imgh);
+    max-width: 60vw;
+    margin-bottom: -1px;
+    transform: scale(1);
+    transform-origin: center;
+    transition: transform 720ms var(--ease);
+    will-change: transform;
+  }
+
+  .hang:hover .frame {
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.6) inset,
+      0 56px 72px -32px rgba(40, 30, 14, 0.46),
+      0 10px 24px -12px rgba(40, 30, 14, 0.3);
+  }
+  /* subtle parallax: the image drifts slightly larger within its frame */
+  .hang:hover .frame img { transform: scale(1.06); }
+
+  /* ---- label block ---- */
+  .label { max-width: min(440px, 78vw); }
+  .label .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--parris-brown);
+    text-indent: 0.2em;
+    margin: 0 0 10px;
+  }
+  .label .title {
     font-family: var(--font-serif);
-    color: rgba(250, 248, 244, 0.7);
-    font-size: 16px;
-    line-height: 1.9;
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(24px, 2.1vw, 32px);
+    line-height: 1.08;
+    letter-spacing: 0.002em;
+    color: var(--fg1);
+    margin: 0 0 12px;
+  }
+  .label .meta {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    color: var(--fg3);
     margin: 0;
   }
-  .footer-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 28px;
-    gap: 16px;
+  .label .note {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--fg2);
+    margin: 9px 0 0;
+    text-wrap: pretty;
   }
-  .footer-bottom span {
-    font-family: var(--font-sans);
-    font-size: 11.5px;
-    color: rgba(250, 248, 244, 0.5);
-    letter-spacing: 0.04em;
-  }
-  .footer-bottom img { height: 28px; opacity: 0.85; }
-  @media (max-width: 720px) {
-    .footer-top { grid-template-columns: 1fr; gap: 28px; }
-  }
-</style>
 
-<!-- ============================================================
-     ESSAY MOOD STYLES (single light mode)
-     ============================================================ -->
+  /* ---- bottom cue + progress ---- */
+  .footer {
+    position: relative;
+    z-index: 20;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 0 0 clamp(22px, 3.4vh, 40px);
+  }
+  .cue {
+    font-family: var(--font-sans);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--parris-brown);
+    text-indent: 0.28em;
+    margin: 0;
+  }
+  .progress {
+    width: clamp(180px, 22vw, 300px);
+    height: 1px;
+    background: var(--line);
+    position: relative;
+  }
+  .progress > i {
+    position: absolute;
+    left: 0; top: 50%;
+    height: 2px;
+    width: 22%;
+    transform: translateY(-50%);
+    background: var(--parris-brown);
+    transition: width 120ms linear, left 120ms linear;
+  }
+
+  /* ============================================================
+     TWEAK MODES — reshape the room's feel
+     ============================================================ */
+  .room { transition: background 700ms var(--ease), filter 460ms var(--ease); }
+  .room.is-blurred { filter: blur(16px) saturate(106%); }
+  .hang { transition: transform 760ms var(--ease); }
+
+  /* ---- THE LIGHT (mood) ---- */
+  /* daylight = base .room background */
+  .room.mood-dusk {
+    background:
+      radial-gradient(140% 66% at 50% -14%, rgba(255, 232, 196, 0.42), rgba(255, 232, 196, 0) 54%),
+      #C9BCA4;
+    --fg3: #79756B;
+    --line: rgba(40, 30, 14, 0.2);
+  }
+  .room.mood-spotlit {
+    background:
+      radial-gradient(118% 58% at 50% -8%, rgba(255, 244, 222, 0.5), rgba(255, 244, 222, 0) 46%),
+      var(--parris-navy);
+    --fg1: #F1EDE6;
+    --fg2: #CBC7BD;
+    --fg3: #97948B;
+    --line: rgba(241, 237, 230, 0.16);
+    --parris-brown: #DCAB5C;     /* lifted ochre, readable on ink */
+  }
+  .room.mood-spotlit .frame {
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.5) inset,
+      0 60px 90px -34px rgba(0, 0, 0, 0.7),
+      0 12px 30px -14px rgba(0, 0, 0, 0.55);
+  }
+
+  /* ---- THE FRAME (treatment) ---- */
+  /* slim = base .frame */
+  .room.frame-gilt .frame,
+  .room.frame-gilt .frame-lg {
+    padding: clamp(9px, 0.9vw, 14px);
+    background:
+      linear-gradient(135deg, #E7C878 0%, #B5893B 36%, #8A6420 60%, #E2C175 100%);
+    border: 1px solid rgba(94, 66, 16, 0.55);
+  }
+  .room.frame-gilt .frame img,
+  .room.frame-gilt .frame-lg img {
+    border: 1px solid rgba(60, 42, 10, 0.35);
+  }
+  .room.frame-float .frame,
+  .room.frame-float .frame-lg {
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: 0 34px 56px -28px rgba(40, 30, 14, 0.5);
+  }
+  .room.mood-spotlit.frame-float .frame,
+  .room.mood-spotlit.frame-float .frame-lg {
+    box-shadow: 0 44px 70px -30px rgba(0, 0, 0, 0.72);
+  }
+
+  /* ============================================================
+     LIGHTBOX — click a work for a larger view
+     ============================================================ */
+  .plate { cursor: zoom-in; }
+
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(40px, 6vw, 96px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 420ms var(--ease), visibility 420ms var(--ease);
+  }
+  .lightbox.open { opacity: 1; visibility: visible; }
+  .lightbox-scrim {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+  }
+
+  .lightbox-fig {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(20px, 2.4vw, 32px);
+    transform: translateY(12px) scale(0.985);
+    transition: transform 460ms var(--ease);
+  }
+  .lightbox.open .lightbox-fig { transform: none; }
+  .frame-lg {
+    background: var(--parris-pure-white);
+    border: none;
+    box-shadow: 0 60px 140px -40px rgba(0, 0, 0, 0.8);
+    font-size: 0;
+    line-height: 0;
+  }
+  .frame-lg img {
+    display: block;
+    max-width: min(76vw, 980px);
+    max-height: 70vh;
+    width: auto;
+    height: auto;
+  }
+
+  .lightbox-cap { text-align: center; max-width: min(560px, 84vw); }
+  .lightbox-cap .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--parris-brown);
+    text-indent: 0.22em;
+    margin: 0 0 10px;
+  }
+  .lightbox-cap .lb-title {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 500;
+    font-size: clamp(26px, 2.6vw, 38px);
+    line-height: 1.08;
+    color: var(--fg1);
+    margin: 0 0 10px;
+  }
+  .lightbox-cap .lb-note {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--fg2);
+    margin: 0;
+    text-wrap: pretty;
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: clamp(20px, 2.4vw, 30px);
+    right: clamp(22px, 3vw, 44px);
+    z-index: 2;
+    width: 46px; height: 46px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: transparent;
+    color: var(--fg1);
+    cursor: pointer; padding: 0;
+    transition: color var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .lightbox-close:hover { color: var(--parris-brown); transform: rotate(90deg); }
+  .lightbox-close svg { width: 26px; height: 26px; stroke-width: 1.6; }
+  .lightbox-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+  /* on phones: widen the artwork and trim the surrounding margin */
+  @media (max-width: 640px) {
+    .lightbox { padding: 16px; }
+    .frame-lg img { max-width: 92vw; max-height: 64vh; }
+    .lightbox-cap { max-width: 92vw; }
+    /* phones: tighten the spacing between plates and grow the paintings */
+    .track { gap: 24px; padding: 0 11vw; }
+    .frame img { max-width: 80vw; }
+  }
+
+  @view-transition { navigation: auto; }
+
+  /* ---- SPLASH SCREEN ---- */
+  #splash {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: #86520A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition: opacity 700ms cubic-bezier(0.4,0,0.2,1);
+    pointer-events: none;
+  }
+  #splash.fade { opacity: 0; }
+  #splash.gone { display: none; }
+  .splash-lockup {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    width: 100%;
+    padding: 0 clamp(36px, 7vw, 120px);
+    column-gap: clamp(36px, 7vw, 120px);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 500ms ease, transform 500ms ease;
+  }
+  .splash-cue {
+    position: absolute;
+    left: 50%;
+    bottom: clamp(28px, 5vh, 56px);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 500ms ease 200ms;
+  }
+  .splash-cue.visible { opacity: 1; }
+  .splash-cue-line {
+    width: 1px;
+    height: 56px;
+    background: linear-gradient(to bottom, rgba(250,248,244,0.66), rgba(250,248,244,0));
+    transform-origin: top;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .splash-cue-line { animation: cuepulse 2.4s ease-in-out infinite; }
+  }
+  @keyframes cuepulse {
+    0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+    50%       { transform: scaleY(1);   opacity: 1; }
+  }
+  .splash-lockup.visible { opacity: 1; transform: translateY(0); }
+  .splash-meta {
+    font-family: var(--font-serif);
+    font-size: clamp(13px, 1.15vw, 17px);
+    font-weight: 500;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: rgba(250,248,244,0.92);
+    white-space: nowrap;
+    text-indent: 0.34em;
+  }
+  .splash-meta--left  { text-align: right; }
+  .splash-meta--right { text-align: left; }
+  .splash-logo { width: 100px; height: auto; display: block; }
+  @media (max-width: 640px) {
+    .splash-meta { display: none; }
+    .splash-lockup { grid-template-columns: auto; justify-content: center; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #splash { transition: none; }
+    .splash-lockup { transition: none; opacity: 1; transform: none; }
+    .splash-cue { opacity: 1; transition: none; }
+  }
+
+  /* ---- lightbox read more link ---- */
+  .lb-readmore {
+    display: inline-block;
+    margin-top: 4px;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--fg2);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(74, 73, 66, 0.3);
+    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  }
+  .lb-readmore:hover { color: var(--fg1); border-color: var(--fg1); }
+
+</style>
 
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<template id="__bundler_thumbnail">
-  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <rect width="100" height="100" fill="#86520A"/>
-    <text x="50" y="62" font-family="Georgia, serif" font-size="40" fill="#FAF8F4" text-anchor="middle">Y</text>
-  </svg>
-</template>
 <body class="theme-light">
 
-  <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false">
-    <i data-lucide="menu"></i>
-  </button>
-
-  <nav class="menu" id="menu" aria-hidden="true">
-    <button class="menu-close" id="menuClose" aria-label="Close menu">
-      <i data-lucide="x"></i>
-    </button>
-    <div class="menu-inner">
-      <ul class="menu-list">
-        <li><a class="menu-link" href="works.html">Works</a></li>
-        <li><a class="menu-link" href="sketches.html">Sketches</a></li>
-        <li><a class="menu-link" href="about.html">About</a></li>
-        <li><a class="menu-link" href="painters-tool.html">Painter&rsquo;s Tool</a></li>
-        <li><a class="menu-link" href="notan.html">Notan</a></li>
-      </ul>
-      <div class="menu-contact">
-        <span class="menu-divider"></span>
-        <a class="menu-email" href="mailto:info@yumiparris.com">info@yumiparris.com</a>
-      </div>
+  <!-- Opening splash — cover lockup matching the live site -->
+  <div id="splash" aria-hidden="true">
+    <div class="splash-lockup" id="splashLockup">
+      <span class="splash-meta splash-meta--left">Y.Parris</span>
+      <img class="splash-logo" src="assets/parris_logo_white.png" alt="Parris" />
+      <span class="splash-meta splash-meta--right" id="splashYear"></span>
     </div>
-  </nav>
 
+  </div>
 
-  <main class="scrolly" id="scrolly">
-    <div class="stage">
+  <main class="room">
 
-      <!-- The painting, full bleed -->
-      <div class="layer layer--image" data-screen-label="Painting (full bleed)">
-        <img id="painting" src="assets/reveal_science_01_web.jpg" alt="Y.Parris — oil on linen" />
+    <!-- top bar -->
+    <header class="bar">
+      <div class="bar-emblem">
+        <a href="index.html" aria-label="Y.Parris — home"><img src="assets/emblem_brown.png" alt="Y.Parris" /></a>
       </div>
+      <div class="bar-mark"></div>
+      <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false">
+        <i data-lucide="menu"></i>
+      </button>
+    </header>
 
-      <!-- Darkening scrim -->
-      <div class="layer layer--scrim" id="scrim"></div>
+    <!-- the hang -->
+    <section class="track" id="track" aria-label="Selected works — scroll to walk the collection">
 
-      <!-- Credit on the first painting -->
-      <p class="first-credit" id="firstCredit"><em>Unveiling Nature</em></p>
-
-      <!-- Opening statement -->
-      <section class="layer layer--statement" id="statement" data-screen-label="Opening statement">
-        <div class="statement-inner">
-          <div class="statement-rule"></div>
-          <p class="statement-text">
-            Mother Nature has a grand orchestrated ecosystem of how things work,
-            which we fail to distinguish between what is merely <em>complicated</em>
-            and what is <em>complex</em>.
-          </p>
+      <article class="hang" style="--y: -14px; --imgh: min(40vh, 430px); --d: 0ms;" data-screen-label="Plate 01" data-readmore="Unveiling_Nature.html">
+        <div class="plate">
+          <div class="frame"><img src="assets/reveal_science_01_web.jpg" alt="Unveiling Nature — oil on linen" /></div>
         </div>
-      </section>
-
-      <!-- Ochre cover -->
-      <section class="layer layer--cover" id="cover" data-screen-label="Cover">
-        <div class="cover-lockup">
-          <span class="cover-meta cover-meta--left">Y.Parris</span>
-          <img class="cover-logo" src="assets/parris_logo_white.png" alt="Parris" />
-          <span class="cover-meta cover-meta--right">2026</span>
+        <div class="label">
+          <p class="eyebrow">Figure</p>
+          <h2 class="title" style="margin: 0px 0px 12px">Unveiling Nature</h2>
+          <p class="note">Nature unveiled, in the name of science.</p>
         </div>
-        <div class="cue" id="cue">
-          <div class="cue-line"></div>
-        </div>
-      </section>
+      </article>
 
-    </div>
+      <article class="hang" style="--y: 52px; --imgh: min(46vh, 470px); --d: 90ms;" data-screen-label="Plate 02">
+        <div class="plate">
+          <div class="frame"><img src="assets/reveal_science_pink_web.jpg" alt="Study in Neon Pink — oil on linen" /></div>
+        </div>
+        <div class="label">
+          <p class="eyebrow">Figure</p>
+          <h2 class="title">Study in Neon Pink</h2>
+          <p class="note">The same hour, lit from the other side.</p>
+        </div>
+      </article>
+
+      <article class="hang" style="--y: 6px; --imgh: min(41vh, 410px); --d: 180ms;" data-screen-label="Plate 03">
+        <div class="plate">
+          <div class="frame"><img src="assets/cow_and_the_sleeping_girl_web.jpg" alt="The Cow and the Sleeping Girl — oil on panel" /></div>
+        </div>
+        <div class="label">
+          <p class="eyebrow">Allegory</p>
+          <h2 class="title">The Cow and the Sleeping Girl</h2>
+          <p class="note">Two animals, one of them dreaming.</p>
+        </div>
+      </article>
+
+      <article class="hang" style="--y: 58px; --imgh: min(44vh, 440px); --d: 270ms;" data-screen-label="Plate 04">
+        <div class="plate">
+          <div class="frame"><img src="assets/ariadne_on_the_panther_web.jpg" alt="Ariadne on the Panther — oil on panel" /></div>
+        </div>
+        <div class="label">
+          <p class="eyebrow">Myth</p>
+          <h2 class="title">Ariadne on the Panther</h2>
+          <p class="note">Carried, half-asleep, into the green.</p>
+        </div>
+      </article>
+
+      <article class="hang" style="--y: 14px; --imgh: min(50vh, 500px); --d: 360ms;" data-screen-label="Plate 05">
+        <div class="plate">
+          <div class="frame"><img src="assets/drink_me_web.jpg" alt="The Impatient&rsquo;s Cure — oil on linen" /></div>
+        </div>
+        <div class="label">
+          <p class="eyebrow">Still Life</p>
+          <h2 class="title">The Impatient&rsquo;s Cure</h2>
+          <p class="note">A small instruction, left on the table.</p>
+        </div>
+      </article>
+
+      <article class="hang" style="--y: -8px; --imgh: min(38vh, 400px); --d: 450ms;" data-screen-label="Plate 06">
+        <div class="plate">
+          <div class="frame"><img src="assets/still_life_meat_grapes_web.jpg" alt="Provisions — oil on panel" /></div>
+        </div>
+        <div class="label">
+          <p class="eyebrow">Still Life</p>
+          <h2 class="title">Provisions</h2>
+          <p class="note">Grapes, a cut of meat, a single lime.</p>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- cue -->
+    <footer class="footer">
+      <div class="progress"><i id="bar"></i></div>
+    </footer>
+
+    <!-- full-screen menu (from Landing page) -->
+    <nav class="menu" id="menu" aria-hidden="true">
+      <button class="menu-close" id="menuClose" aria-label="Close menu">
+        <i data-lucide="x"></i>
+      </button>
+      <div class="menu-inner" style="text-align: left">
+        <ul class="menu-list">
+          <li><a class="menu-link" href="index.html" aria-current="page">Works</a></li>
+          <li><a class="menu-link" href="sketches.html">Sketches</a></li>
+          <li><a class="menu-link" href="about.html">About</a></li>
+          <li><a class="menu-link" href="painters-tool.html">Painter&rsquo;s Tool</a></li>
+          <li><a class="menu-link" href="notan.html">Notan</a></li>
+        </ul>
+        <div class="menu-contact">
+          <span class="menu-divider"></span>
+          <a class="menu-email" href="mailto:info@yumiparris.com">info@yumiparris.com</a>
+        </div>
+      </div>
+    </nav>
+
   </main>
 
-  <!-- Continuing thesis -->
-  <section class="essay" id="works" data-screen-label="Continuing thesis">
-
-    <figure class="plate-hero" data-screen-label="Reveal / Science (pink)">
-      <img class="rise" src="assets/reveal_science_pink_web.jpg" alt="Y.Parris — Study in neon pink" />
-      <p class="plate-cap rise"><em>Study in neon pink</em></p>
+  <!-- lightbox modal (sibling of .room so the room can blur behind it) -->
+  <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Artwork detail">
+    <div class="lightbox-scrim" id="lightboxScrim"></div>
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">
+      <i data-lucide="x"></i>
+    </button>
+    <figure class="lightbox-fig">
+      <div class="frame-lg"><img id="lbImg" src="" alt="" /></div>
+      <figcaption class="lightbox-cap">
+        <p class="eyebrow" id="lbEyebrow"></p>
+        <h2 class="lb-title" id="lbTitle"></h2>
+        <p class="lb-note" id="lbNote"></p>
+        <a class="lb-readmore" id="lbReadMore" href="#" style="display:none">read more</a>
+      </figcaption>
     </figure>
-
-    <div class="essay-body">
-      <p class="rise">
-        <span class="lead-cap">T</span>hese are my paintings of <em>&ldquo;Nature Unveiling herself before Science,&rdquo;</em>
-        which is a famous sculpture by Louis-Ernest Barrias. Most people know the famous copy in the
-        Mus&eacute;e d&rsquo;Orsay. <span class="figref">(Fig.&thinsp;1)</span>
-      </p>
-
-      <div class="plate-pair plate-pair--match rise">
-        <figure>
-          <img src="assets/musee_dorsay.jpg" alt="Nature Unveiling herself before Science — Louis-Ernest Barrias, Musée d'Orsay" />
-          <figcaption><b>Fig. 1</b><em>Nature Unveiling herself before Science</em> &mdash; Louis-Ernest Barrias, marble &amp; onyx, Mus&eacute;e d&rsquo;Orsay, Paris.</figcaption>
-        </figure>
-        <figure>
-          <img src="assets/veil_of_isis.jpg" alt="The Veil of Isis — veiled allegorical figure" />
-          <figcaption><b>Fig. 2</b>The <em>Veil of Isis</em> &mdash; the goddess shrouded, an allegory of nature&rsquo;s inaccessible secrets.</figcaption>
-        </figure>
-      </div>
-
-      <p class="rise">
-        There&rsquo;s something about this sculpture that really draws me in. The female figure has long been
-        associated with mother nature across cultures, languages, and history. This sculpture opposed the
-        <em>Veil of Isis</em> <span class="figref">(Fig.&thinsp;2)</span>, a symbol representing nature&rsquo;s
-        inaccessible secrets. Isis remained unknowable, whereas Barrias showed Nature unveiling herself. This shift
-        reflected overall changes to people&rsquo;s beliefs: the late 19th century believed nature held no more
-        mysteries to protect, only mechanisms to dissect. It opened up the possibility to manipulate the true
-        nature. <span class="figref">(Fig.&thinsp;3)</span>
-      </p>
-
-      <figure class="plate-single rise">
-        <img src="assets/ref_2.jpg" alt="Frontispiece, Anatome Animalium, 1681" />
-        <figcaption><b>Fig. 3</b>Frontispiece &mdash; G. Blasius, <em>Anatome Animalium</em>, Amsterdam, 1681.</figcaption>
-      </figure>
-
-      <p class="rise">
-        Today, technology advances and we call it progress, but it might not be that straightforward. There&rsquo;s
-        still a lot of mystery. Science is evolving and questioning, nothing is certain. Yet Science has become a
-        label that gets attached to a finished product and never look back. We&rsquo;ve forgotten that Mother Nature
-        has a grand orchestrated ecosystem of how things work, which we fail to distinguish between what is merely
-        <em>complicated</em> and what is <em>complex</em>. Our impatience drives us to oversimplify and rush to an
-        outcome, when nature may have prepared us to self-correct and realign anyway. But we&rsquo;re too impatient to
-        find out. Time is the only testament of science. Did it work? Well, consequences are the price we pay with the
-        lack of patience.
-      </p>
-    </div>
-
-  </section>
-
-  <!-- Drink me — contained plate -->
-  <figure class="plate-contain plate-contain--dark" data-screen-label="Drink me">
-    <img src="assets/drink_me_web.jpg" alt="Y.Parris — Drink me" />
-    <p class="plate-cap"><em>The Impatient&rsquo;s Cure</em></p>
-    <a class="back-to-gallery" href="works.html">Back to the gallery</a>
-  </figure>
-
-  <!-- Footer (Website UI Kit) -->
-  <footer class="site-footer" data-screen-label="Footer">
-    <div class="footer-top">
-      <div>
-        <img class="foot-logo" src="assets/logotype_white.png" alt="Y.PARRIS" />
-      </div>
-      <div>
-        <nav class="foot-links">
-          <a href="works.html">Works</a>
-          <a href="sketches.html">Sketches</a>
-          <a href="about.html">About</a>
-          <a href="painters-tool.html">Painter&rsquo;s Tool</a>
-          <a href="notan.html">Notan</a>
-          <a href="mailto:info@yumiparris.com">Contact</a>
-        </nav>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>&copy; 2026 Y.PARRIS. All rights reserved.</span>
-      <img src="assets/emblem_white.png" alt="" />
-    </div>
-  </footer>
+  </div>
 
   <script>
     (function () {
-      var scrolly   = document.getElementById('scrolly');
-      var cover     = document.getElementById('cover');
-      var cue       = document.getElementById('cue');
-      var scrim     = document.getElementById('scrim');
-      var firstCredit = document.getElementById('firstCredit');
-      var statement = document.getElementById('statement');
-      var painting  = document.getElementById('painting');
+      var track = document.getElementById('track');
+      var bar   = document.getElementById('bar');
 
-      function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
-      // normalized progress within [a,b] -> [0,1]
-      function seg(p, a, b) { return clamp((p - a) / (b - a), 0, 1); }
-      function lerp(a, b, t) { return a + (b - a) * t; }
-
-      var last = -1;
-      var veil = 1;   // atmosphere multiplier — how heavily the painting recedes
-      window.__thesisSetVeil = function (v) { veil = v; last = -1; render(computeP()); };
-
-      function computeP() {
-        var rect = scrolly.getBoundingClientRect();
-        var travel = scrolly.offsetHeight - window.innerHeight;
-        return clamp(-rect.top / travel, 0, 1);
+      /* --- scroll progress --- */
+      function maxScroll() { return Math.max(1, track.scrollWidth - track.clientWidth); }
+      function updateBar() {
+        var p = track.scrollLeft / maxScroll();           // 0..1
+        var travel = 100 - 22;                              // bar inner width is 22%
+        bar.style.left = (p * travel) + '%';
       }
+      track.addEventListener('scroll', updateBar, { passive: true });
 
-      function tick() {
-        var p = computeP();
-        if (Math.abs(p - last) > 0.0005) {
-          last = p;
-          render(p);
+      /* --- vertical wheel → horizontal walk --- */
+      track.addEventListener('wheel', function (e) {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          track.scrollLeft += e.deltaY;
+          e.preventDefault();
         }
-        requestAnimationFrame(tick);
-      }
+      }, { passive: false });
 
-      // expose a synchronous sync hook (used for capture / throttled-rAF contexts)
-      window.__thesisSync = function () { last = -1; render(computeP()); };
-      window.__thesisRender = function (p) { render(p); };
+      /* --- click-drag to pan --- */
+      var down = false, startX = 0, startL = 0, moved = 0;
+      track.addEventListener('mousedown', function (e) {
+        down = true; moved = 0;
+        startX = e.pageX; startL = track.scrollLeft;
+        track.classList.add('dragging');
+      });
+      window.addEventListener('mousemove', function (e) {
+        if (!down) return;
+        var dx = e.pageX - startX;
+        moved = Math.max(moved, Math.abs(dx));
+        track.scrollLeft = startL - dx;
+      });
+      window.addEventListener('mouseup', function () {
+        down = false; track.classList.remove('dragging');
+      });
+      track.addEventListener('click', function (e) {
+        if (moved > 6) { e.preventDefault(); e.stopPropagation(); }
+      }, true);
 
-      function render(p) {
-
-        // ACT 1 — ochre cover fades & lifts away (0 → 0.16)
-        var coverOut = seg(p, 0.02, 0.16);
-        cover.style.opacity = String(1 - seg(p, 0.02, 0.11));
-        cover.style.transform = 'translateY(' + (-2.5 * coverOut) + 'vh)';
-        cue.style.opacity = String(1 - seg(p, 0.0, 0.07));
-
-        // ACT 2 — painting holds sharp (0.16 → 0.46)
-
-        // ACT 3 — painting blurs & darkens as the words arrive (0.46 → 0.80)
-        var recede = seg(p, 0.46, 0.80);
-        var blur = lerp(0, 17 * veil, recede);
-        var sat = lerp(1, clamp(1 - 0.22 * veil, 0.15, 1), recede);
-        painting.style.filter = 'blur(' + blur.toFixed(2) + 'px) saturate(' + sat.toFixed(3) + ')';
-        scrim.style.opacity = String(lerp(0, clamp(0.4 + 0.6 * veil, 0, 1), seg(p, 0.42, 0.78)));
-
-        // Credit on first painting: rises in like the headline, then fades out drifting up
-        var creditIn = seg(p, 0.16, 0.22);
-        var creditOut = seg(p, 0.42, 0.55);
-        firstCredit.style.opacity = String(creditIn * (1 - creditOut));
-        var creditY = lerp(26, 0, creditIn) + lerp(0, -30, creditOut);
-        firstCredit.style.transform = 'translate(-50%, calc(-50% + ' + creditY.toFixed(2) + 'px))';
-
-        // Statement rises & holds (0.54 → 0.80, holds to 1)
-        var inProg = seg(p, 0.54, 0.80);
-        statement.style.opacity = String(inProg);
-        statement.style.transform = 'translateY(' + lerp(26, 0, inProg) + 'px)';
-      }
-
-      render(computeP());
-      requestAnimationFrame(tick);
-      window.addEventListener('scroll', function(){ last = -1; }, { passive: true });
-      window.addEventListener('resize', function(){ last = -1; }, { passive: true });
-    })();
-
-    /* ---- Auto-reveal: the cover slowly lifts on its own to show the painting ---- */
-    (function () {
-      var scrolly = document.getElementById('scrolly');
-      if (!scrolly) return;
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-      var cancelled = false;
-      function teardown() {
-        ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(function (ev) {
-          window.removeEventListener(ev, cancel);
-        });
-      }
-      function cancel() { cancelled = true; teardown(); }
-      ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(function (ev) {
-        window.addEventListener(ev, cancel, { passive: true });
+      /* --- arrow keys --- */
+      window.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight') { track.scrollLeft += track.clientWidth * 0.6; }
+        if (e.key === 'ArrowLeft')  { track.scrollLeft -= track.clientWidth * 0.6; }
       });
 
-      function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+      /* --- staggered entrance handled in CSS --- */
 
-      function run() {
-        if (cancelled || window.scrollY > 4) { teardown(); return; }
-        var travel = scrolly.offsetHeight - window.innerHeight;
-        var start = window.scrollY;
-        var dist = 0.22 * travel - start;   // clear the cover, settle on the sharp painting
-        var dur = 4600;                       // slow, deliberate
-        var t0 = null;
-        function frame(ts) {
-          if (cancelled) return;
-          if (t0 === null) t0 = ts;
-          var t = Math.min(1, (ts - t0) / dur);
-          window.scrollTo(0, start + dist * easeInOut(t));
-          if (t < 1) requestAnimationFrame(frame);
-          else teardown();
-        }
-        requestAnimationFrame(frame);
-      }
-
-      // let the cover hold for a beat, then begin the reveal
-      setTimeout(run, 1200);
+      updateBar();
     })();
 
-    /* ---- Menu ---- */
+    /* ---- Menu (from Landing page) ---- */
     (function () {
       if (window.lucide) lucide.createIcons();
       var btn   = document.getElementById('menuBtn');
@@ -971,87 +848,225 @@
       }
       btn.addEventListener('click', open);
       close.addEventListener('click', shut);
-      menu.addEventListener('click', function (e) {
-        if (e.target === menu) shut();
-      });
-      menu.querySelectorAll('a').forEach(function (a) {
-        a.addEventListener('click', shut);
-      });
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') shut();
-      });
+      menu.addEventListener('click', function (e) { if (e.target === menu) shut(); });
+      menu.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', shut); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') shut(); });
     })();
 
-    /* ---- Reveal-on-scroll for the essay ---- */
+    /* ---- Splash ---- */
     (function () {
-      var items = document.querySelectorAll('.rise');
-      if (!('IntersectionObserver' in window)) {
-        items.forEach(function (el) { el.classList.add('in'); });
-        return;
-      }
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) {
-            e.target.classList.add('in');
-            io.unobserve(e.target);
-          }
+          var splash   = document.getElementById('splash');
+      var lockup   = document.getElementById('splashLockup');
+      var cue      = document.getElementById('splashCue');
+      document.getElementById('splashYear').textContent = new Date().getFullYear();
+      if (!splash) return;
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          lockup.classList.add('visible');
+          if (cue) cue.classList.add('visible');
         });
-      }, { threshold: 0.16, rootMargin: '0px 0px -8% 0px' });
-      items.forEach(function (el) { io.observe(el); });
+      });
+      setTimeout(function () {
+        splash.classList.add('fade');
+        setTimeout(function () { splash.classList.add('gone'); }, 720);
+      }, 1100);
+    })();
+
+    /* ---- Lightbox ---- */
+    (function () {
+      var lb      = document.getElementById('lightbox');
+      var scrim   = document.getElementById('lightboxScrim');
+      var closeB  = document.getElementById('lightboxClose');
+      var lbImg   = document.getElementById('lbImg');
+      var lbEye   = document.getElementById('lbEyebrow');
+      var lbTitle = document.getElementById('lbTitle');
+      var lbNote  = document.getElementById('lbNote');
+
+      // build the collection from the hangs already on the wall
+      var works = [].slice.call(document.querySelectorAll('.track .hang')).map(function (hang) {
+        var img = hang.querySelector('.frame img');
+        return {
+          src:     img.getAttribute('src'),
+          alt:     img.getAttribute('alt') || '',
+          eyebrow: (hang.querySelector('.eyebrow') || {}).textContent || '',
+          title:   (hang.querySelector('.title')   || {}).textContent || '',
+          note:    (hang.querySelector('.note')     || {}).textContent || '',
+          link:    hang.getAttribute('data-readmore') || ''
+        };
+      });
+
+      var idx = 0;
+
+      var lbMore = document.getElementById('lbReadMore');
+
+      function render() {
+        var w = works[idx];
+        lbImg.src = w.src;
+        lbImg.alt = w.alt;
+        lbEye.textContent   = w.eyebrow;
+        lbTitle.textContent = w.title;
+        lbNote.textContent  = w.note;
+        if (w.link) {
+          lbMore.href = w.link;
+          lbMore.style.display = '';
+        } else {
+          lbMore.style.display = 'none';
+        }
+      }
+      function open(i) {
+        idx = i;
+        render();
+        lb.classList.add('open');
+        lb.setAttribute('aria-hidden', 'false');
+        var room = document.querySelector('.room');
+        if (room) room.classList.add('is-blurred');
+        document.body.style.overflow = 'hidden';
+      }
+      function shut() {
+        lb.classList.remove('open');
+        lb.setAttribute('aria-hidden', 'true');
+        var room = document.querySelector('.room');
+        if (room) room.classList.remove('is-blurred');
+        document.body.style.overflow = '';
+      }
+
+      document.querySelectorAll('.track .hang').forEach(function (hang, i) {
+        var plate = hang.querySelector('.plate');
+        if (!plate) return;
+        plate.addEventListener('click', function (e) {
+          // ignore the click that ends a drag-pan
+          if (hang.closest('.track').classList.contains('dragging')) return;
+          e.preventDefault();
+          open(i);
+        });
+      });
+
+      closeB.addEventListener('click', shut);
+      scrim.addEventListener('click', shut);
+      document.addEventListener('keydown', function (e) {
+        if (!lb.classList.contains('open')) return;
+        if (e.key === 'Escape')     { shut(); }
+      });
+
+      // Stretch-to-full-bleed transition to read-more page
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest('#lbReadMore');
+        if (!a || !a.href || a.href === '#') return;
+        e.preventDefault();
+        var dest = a.href;
+
+        var img = document.getElementById('lbImg');
+        var rect = img.getBoundingClientRect();
+
+        // Expanding image overlay — <img> so object-position matches Unveiling_Nature.html exactly
+        var w = window.innerWidth;
+        var objPos = w <= 640 ? '30% 33%' : w <= 1024 ? '36% 22%' : '50% 38%';
+
+        var overlay = document.createElement('img');
+        overlay.src = img.src;
+        overlay.style.cssText = [
+          'position:fixed', 'z-index:9999', 'pointer-events:none',
+          'top:' + rect.top + 'px',
+          'left:' + rect.left + 'px',
+          'width:' + rect.width + 'px',
+          'height:' + rect.height + 'px',
+          'object-fit:cover',
+          'object-position:' + objPos,
+          'transition:top 700ms cubic-bezier(0.76,0,0.24,1),left 700ms cubic-bezier(0.76,0,0.24,1),width 700ms cubic-bezier(0.76,0,0.24,1),height 700ms cubic-bezier(0.76,0,0.24,1)',
+          'will-change:top,left,width,height'
+        ].join(';');
+        document.body.appendChild(overlay);
+
+        // Fade the lightbox chrome out
+        var fig = document.querySelector('.lightbox-fig');
+        var closeBtn = document.getElementById('lightboxClose');
+        if (fig) { fig.style.transition = 'opacity 220ms'; fig.style.opacity = '0'; }
+        if (closeBtn) { closeBtn.style.transition = 'opacity 220ms'; closeBtn.style.opacity = '0'; }
+
+        // Expand to full viewport
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            overlay.style.top    = '0px';
+            overlay.style.left   = '0px';
+            overlay.style.width  = window.innerWidth + 'px';
+            overlay.style.height = window.innerHeight + 'px';
+          });
+        });
+
+        try { sessionStorage.setItem('y_from_gallery', '1'); } catch (_) {}
+
+        setTimeout(function () { window.location.href = dest; }, 740);
+      });
+
+      if (window.lucide) lucide.createIcons();
     })();
   </script>
 
-  <!-- ============================================================
-       TWEAKS — expressive controls for the page's atmosphere
-       ============================================================ -->
+  <!-- ============ TWEAKS ============ -->
   <div id="tweaks-root"></div>
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
   <script type="text/babel" src="tweaks-panel.jsx"></script>
   <script type="text/babel">
-    const FIELDS = {
-      "Burnt Ochre": "#86520A",
-      "Ultramarine": "#0C38EA",
-      "Ink Navy":    "#222B43",
-      "Charcoal":    "#1A1916"
-    };
-
     const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-      "field": "#86520A",
-      "atmosphere": 0.35
+      "light": "daylight",
+      "hang": "salon",
+      "frame": "float"
     }/*EDITMODE-END*/;
 
-    function TweaksApp() {
+    const HANG_OFFSETS = {
+      salon:   [-14, 52, 6, 58, 14],   // the curator's varied wall
+      line:    [0, 0, 0, 0, 0],         // museum eye-line
+      cascade: [-64, -28, 8, 44, 80]    // a descending stair
+    };
+
+    function ParrisTweaks() {
       const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
 
-      React.useEffect(() => {
-        document.documentElement.style.setProperty('--cover-field', t.field);
-      }, [t.field]);
-
-      React.useEffect(() => {
-        if (window.__thesisSetVeil) window.__thesisSetVeil(t.atmosphere);
-      }, [t.atmosphere]);
+      React.useEffect(function () {
+        const room = document.querySelector('.room');
+        if (!room) return;
+        ['daylight', 'dusk', 'spotlit'].forEach(function (m) {
+          room.classList.toggle('mood-' + m, t.light === m);
+        });
+        ['slim', 'gilt', 'float'].forEach(function (f) {
+          room.classList.toggle('frame-' + f, t.frame === f);
+        });
+        const ys = HANG_OFFSETS[t.hang] || HANG_OFFSETS.salon;
+        document.querySelectorAll('.track .hang').forEach(function (h, i) {
+          h.style.setProperty('--y', (ys[i] != null ? ys[i] : 0) + 'px');
+        });
+      }, [t.light, t.hang, t.frame]);
 
       return (
         <TweaksPanel title="Tweaks">
-          <TweakSection label="Atmosphere" />
-          <TweakSlider
-            label="Veil"
-            value={t.atmosphere}
-            min={0.2} max={1.8} step={0.05}
-            onChange={(v) => setTweak('atmosphere', v)} />
-          <TweakSection label="Opening field" />
-          <TweakColor
-            label="Cover"
-            value={t.field}
-            options={Object.values(FIELDS)}
-            onChange={(v) => setTweak('field', v)} />
+          <TweakSection label="The Light" />
+          <TweakRadio
+            label="Mood"
+            value={t.light}
+            options={['daylight', 'dusk', 'spotlit']}
+            onChange={function (v) { setTweak('light', v); }}
+          />
+          <TweakSection label="The Hang" />
+          <TweakRadio
+            label="Arrangement"
+            value={t.hang}
+            options={['salon', 'line', 'cascade']}
+            onChange={function (v) { setTweak('hang', v); }}
+          />
+          <TweakSection label="The Frame" />
+          <TweakRadio
+            label="Treatment"
+            value={t.frame}
+            options={['slim', 'gilt', 'float']}
+            onChange={function (v) { setTweak('frame', v); }}
+          />
         </TweaksPanel>
       );
     }
 
-    ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<TweaksApp />);
+    ReactDOM.createRoot(document.getElementById('tweaks-root')).render(<ParrisTweaks />);
   </script>
 
 </body>
